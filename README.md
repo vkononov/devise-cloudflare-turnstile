@@ -1,43 +1,109 @@
-# Devise::Cloudflare::Turnstile
+# Devise Cloudflare Turnstile
 
-TODO: Delete this and the text below, and describe your gem
+Automatically protect all Devise authentication forms with Cloudflare Turnstile. Zero configuration required - just install and set your API keys.
 
-Welcome to your new gem! In this directory, you'll find the files you need to be able to package up your Ruby library into a gem. Put your Ruby code in the file `lib/devise/cloudflare/turnstile`. To experiment with that code, run `bin/console` for an interactive prompt.
+## Features
+
+- Automatic protection for all Devise `create` actions (sign in, sign up, password reset, etc.)
+- Works with Devise extensions like devise-invitable out of the box
+- Auto-injects Turnstile widget into forms via JavaScript (no view modifications needed)
+- Turbo and Turbolinks compatible
+- CSP nonce support
 
 ## Installation
 
-TODO: Replace `UPDATE_WITH_YOUR_GEM_NAME_IMMEDIATELY_AFTER_RELEASE_TO_RUBYGEMS_ORG` with your gem name right after releasing it to RubyGems.org. Please do not do it earlier due to security reasons. Alternatively, replace this section with instructions to install your gem from git if you don't plan to release to RubyGems.org.
+Add the gem to your Gemfile:
 
-Install the gem and add to the application's Gemfile by executing:
-
-```bash
-bundle add UPDATE_WITH_YOUR_GEM_NAME_IMMEDIATELY_AFTER_RELEASE_TO_RUBYGEMS_ORG
+```ruby
+gem "devise-cloudflare-turnstile"
 ```
 
-If bundler is not being used to manage dependencies, install the gem by executing:
+Run the installer:
 
 ```bash
-gem install UPDATE_WITH_YOUR_GEM_NAME_IMMEDIATELY_AFTER_RELEASE_TO_RUBYGEMS_ORG
+bundle install
+rails generate devise_cloudflare_turnstile:install
 ```
 
-## Usage
+Set your Cloudflare Turnstile credentials via environment variables:
 
-TODO: Write usage instructions here
+```bash
+export CLOUDFLARE_TURNSTILE_SITE_KEY=your_site_key
+export CLOUDFLARE_TURNSTILE_SECRET_KEY=your_secret_key
+```
 
-## Development
+That's it! All Devise forms are now protected.
 
-After checking out the repo, run `bin/setup` to install dependencies. Then, run `rake test` to run the tests. You can also run `bin/console` for an interactive prompt that will allow you to experiment.
+## Getting API Keys
 
-To install this gem onto your local machine, run `bundle exec rake install`. To release a new version, update the version number in `version.rb`, and then run `bundle exec rake release`, which will create a git tag for the version, push git commits and the created tag, and push the `.gem` file to [rubygems.org](https://rubygems.org).
+1. Go to [Cloudflare Turnstile Dashboard](https://dash.cloudflare.com/turnstile)
+2. Create a new site
+3. Copy your Site Key and Secret Key
 
-## Contributing
+## Testing / Development
 
-Bug reports and pull requests are welcome on GitHub at https://github.com/[USERNAME]/devise-cloudflare-turnstile. This project is intended to be a safe, welcoming space for collaboration, and contributors are expected to adhere to the [code of conduct](https://github.com/[USERNAME]/devise-cloudflare-turnstile/blob/main/CODE_OF_CONDUCT.md).
+For testing, use Cloudflare's dummy keys:
+
+| Key Type | Value | Behavior |
+|----------|-------|----------|
+| Site Key | `1x00000000000000000000AA` | Always passes (visible) |
+| Secret Key | `1x0000000000000000000000000000000AA` | Always passes |
+| Site Key | `2x00000000000000000000AB` | Always blocks (visible) |
+| Secret Key | `2x0000000000000000000000000000000AA` | Always fails |
+
+## How It Works
+
+### Controller Protection
+
+The gem automatically includes a `before_action` on all Devise controllers that:
+1. Validates the Turnstile response on `create` actions
+2. Re-renders the form with errors if validation fails
+
+### View Integration
+
+On `new` and `edit` actions, the gem marks the page for Turnstile protection. The included JavaScript automatically:
+1. Detects forms on protected pages
+2. Injects the Turnstile widget before submit buttons
+3. Handles Turbo/Turbolinks navigation
+
+### Layout Requirements
+
+The install generator adds these helpers to your layout's `<head>`:
+
+```erb
+<%= devise_turnstile_meta_tag %>
+<%= devise_turnstile_script_tag %>
+<%= devise_turnstile_scripts %>
+```
+
+- `devise_turnstile_meta_tag` - Outputs the site key for JavaScript
+- `cloudflare_turnstile_script_tag` - Loads the Cloudflare Turnstile script (from cloudflare-turnstile-rails)
+- `devise_turnstile_scripts` - Loads the auto-inject JavaScript (only on Devise pages)
+
+## Skipping Protection
+
+If you need to skip Turnstile protection for a specific controller, create a custom controller:
+
+```ruby
+# app/controllers/users/confirmations_controller.rb
+class Users::ConfirmationsController < Devise::ConfirmationsController
+  skip_before_action :verify_cloudflare_turnstile!
+end
+```
+
+Then update your routes:
+
+```ruby
+devise_for :users, controllers: { confirmations: "users/confirmations" }
+```
+
+## Dependencies
+
+- [devise](https://github.com/heartcombo/devise) >= 4.0
+- [cloudflare-turnstile-rails](https://github.com/vkononov/cloudflare-turnstile-rails) >= 1.0
+- Rails >= 6.0
+- Ruby >= 2.7
 
 ## License
 
-The gem is available as open source under the terms of the [MIT License](https://opensource.org/licenses/MIT).
-
-## Code of Conduct
-
-Everyone interacting in the Devise::Cloudflare::Turnstile project's codebases, issue trackers, chat rooms and mailing lists is expected to follow the [code of conduct](https://github.com/[USERNAME]/devise-cloudflare-turnstile/blob/main/CODE_OF_CONDUCT.md).
+MIT License. See [LICENSE.txt](LICENSE.txt) for details.
