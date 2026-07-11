@@ -31,5 +31,4 @@ Gem::Specification.new do |spec|
 
   spec.add_dependency 'cloudflare-turnstile-rails', '>= 1.0'
   spec.add_dependency 'devise', '>= 4.0'
-  spec.add_dependency 'railties', '>= 6.0'
 end
