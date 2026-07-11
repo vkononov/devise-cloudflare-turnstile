@@ -23,6 +23,13 @@ module Dummy
     config.logger = Logger.new(File::NULL)
     config.hosts.clear if config.respond_to?(:hosts)
 
+    # Rails 5.1+ Static middleware is keyword-only; MiddlewareStack forwards
+    # options via *args, which breaks under Ruby 3. We do not need public
+    # file serving in these tests.
+    if config.respond_to?(:public_file_server)
+      config.public_file_server.enabled = false
+    end
+
     # Rails 7.1+ uses a symbol; older versions expect a boolean.
     config.action_dispatch.show_exceptions = if Rails::VERSION::STRING >= '7.1'
                                                :none
@@ -41,6 +48,23 @@ module Dummy
 end
 
 Rails.application.initialize!
+
+# Rails 5.0's Integration RequestHelpers collect options via *args and then pass a
+# Hash positionally into keyword-only `process`, which breaks under Ruby 3's
+# keyword separation. Rails 5.1+ uses **args; mirror that for 5.0 in tests.
+if Rails::VERSION::MAJOR == 5 && Rails::VERSION::MINOR.zero?
+  module ActionDispatch
+    module Integration
+      module RequestHelpers
+        %i[get post patch put head delete].each do |http_method|
+          define_method(http_method) do |path, **args|
+            process(http_method, path, **args)
+          end
+        end
+      end
+    end
+  end
+end
 
 Cloudflare::Turnstile::Rails.configure do |config|
   config.site_key = 'SITEKEY'
@@ -81,9 +105,15 @@ class ConcernTestController < ActionController::Base
     resource.clean_up_passwords if resource.respond_to?(:clean_up_passwords)
   end
 
-  def new; end
+  # Explicit render avoids Rails 5.0 + Ruby 3 breaking implicit template
+  # lookup (ViewPaths#template_exists? is delegated without ruby2_keywords).
+  def new
+    render template: 'concern_test/new'
+  end
 
-  def edit; end
+  def edit
+    render template: 'concern_test/edit'
+  end
 
   def create
     render inline: ViewHelperTestController::TEMPLATE

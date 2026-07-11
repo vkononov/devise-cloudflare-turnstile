@@ -31,6 +31,8 @@ class ViewHelpersTest < ActionDispatch::IntegrationTest
   end
 
   def test_scripts_carry_the_csp_nonce
+    skip 'CSP nonces require Rails 5.2+' if Rails::VERSION::STRING < '5.2'
+
     get '/protected'
 
     nonces = @response.body.scan(/<script[^>]*\bnonce="([^"]+)"/).flatten

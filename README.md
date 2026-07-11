@@ -1,8 +1,8 @@
 # Devise Cloudflare Turnstile
 
 [![Gem Version](https://img.shields.io/gem/v/devise-cloudflare-turnstile.svg?label=Gem&logo=rubygems&logoColor=white)](https://rubygems.org/gems/devise-cloudflare-turnstile)
-[![Ruby](https://img.shields.io/badge/Ruby-2.7%20to%204.0-CC342D?logo=ruby&logoColor=white)](https://github.com/vkononov/devise-cloudflare-turnstile/blob/main/.github/workflows/test.yml)
-[![Rails](https://img.shields.io/badge/Rails-6.0%20to%208.1-D30001?logo=rubyonrails&logoColor=white)](https://github.com/vkononov/devise-cloudflare-turnstile/blob/main/Appraisals)
+[![Ruby](https://img.shields.io/badge/Ruby-2.6%20to%204.0-CC342D?logo=ruby&logoColor=white)](https://github.com/vkononov/devise-cloudflare-turnstile/blob/main/.github/workflows/test.yml)
+[![Rails](https://img.shields.io/badge/Rails-5.0%20to%208.1-D30001?logo=rubyonrails&logoColor=white)](https://github.com/vkononov/devise-cloudflare-turnstile/blob/main/Appraisals)
 [![Test Matrix](https://img.shields.io/github/actions/workflow/status/vkononov/devise-cloudflare-turnstile/test.yml?branch=main&label=Test%20Matrix&logo=github)](https://github.com/vkononov/devise-cloudflare-turnstile/actions/workflows/test.yml)
 [![Lint](https://img.shields.io/github/actions/workflow/status/vkononov/devise-cloudflare-turnstile/lint.yml?branch=main&label=Lint&logo=github)](https://github.com/vkononov/devise-cloudflare-turnstile/actions/workflows/lint.yml)
 [![License](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
@@ -11,7 +11,7 @@ Automatically protect all Devise authentication forms with Cloudflare Turnstile.
 
 Built on [cloudflare-turnstile-rails](https://github.com/vkononov/cloudflare-turnstile-rails) for verification, widget rendering, CSP nonces, and Turbo support.
 
-Supports **Rails 6.0 → latest** and **Ruby 2.7 → latest**, with the full Rails/Ruby matrix tested daily in CI.
+Supports **Rails 5.0 → latest** and **Ruby 2.6 → latest**, with the full Rails/Ruby matrix tested daily in CI.
 
 [!["Buy Me A Coffee"](https://www.buymeacoffee.com/assets/img/custom_images/yellow_img.png)](https://www.buymeacoffee.com/vkononov)
 
