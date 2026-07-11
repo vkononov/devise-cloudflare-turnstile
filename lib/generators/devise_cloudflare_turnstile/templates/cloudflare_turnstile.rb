@@ -1,5 +1,3 @@
-# frozen_string_literal: true
-
 # Cloudflare Turnstile configuration
 #
 # This gem automatically protects all Devise forms with Cloudflare Turnstile.
@@ -14,6 +12,6 @@
 #   https://developers.cloudflare.com/turnstile/troubleshooting/testing/
 
 Cloudflare::Turnstile::Rails.configure do |config|
-  config.site_key   = ENV.fetch("CLOUDFLARE_TURNSTILE_SITE_KEY", nil)
-  config.secret_key = ENV.fetch("CLOUDFLARE_TURNSTILE_SECRET_KEY", nil)
+  config.site_key   = ENV.fetch('CLOUDFLARE_TURNSTILE_SITE_KEY', nil)
+  config.secret_key = ENV.fetch('CLOUDFLARE_TURNSTILE_SECRET_KEY', nil)
 end

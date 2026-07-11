@@ -1,8 +1,64 @@
+plugins:
+  - rubocop-md
+  - rubocop-minitest
+  - rubocop-performance
+  - rubocop-rake
+
 AllCops:
-  TargetRubyVersion: 3.1
+  TargetRubyVersion: 2.7
+  NewCops: enable
+  SuggestExtensions: false
+  Exclude:
+    - .git/**/*
+    - node_modules/**/*
+    - vendor/bundle/**/*
+    - cloudflare-turnstile-rails/**/*
+    - gemfiles/**/*
 
-Style/StringLiterals:
-  EnforcedStyle: double_quotes
+Layout/IndentationConsistency:
+  Exclude:
+    - README.md
 
-Style/StringLiteralsInInterpolation:
-  EnforcedStyle: double_quotes
+Layout/InitialIndentation:
+  Exclude:
+    - README.md
+
+Layout/LineLength:
+  Max: 120
+  Exclude:
+    - devise-cloudflare-turnstile.gemspec
+
+Layout/SpaceInsideHashLiteralBraces:
+  Enabled: false
+
+Metrics/MethodLength:
+  Max: 12
+  Exclude:
+    - lib/generators/**/*
+
+Metrics/AbcSize:
+  Exclude:
+    - lib/generators/**/*
+
+Minitest/MultipleAssertions:
+  Enabled: false
+
+Naming/FileName:
+  Exclude:
+    - lib/devise-cloudflare-turnstile.rb
+    - README.md
+    - CHANGELOG.md
+
+Style/Documentation:
+  Enabled: false
+
+Style/EmptyElse:
+  Exclude:
+    - README.md
+
+Style/FrozenStringLiteralComment:
+  EnforcedStyle: never
+
+Layout/IndentationWidth:
+  Exclude:
+    - README.md

@@ -1,36 +1,56 @@
-# frozen_string_literal: true
-
 module Devise
   module Cloudflare
     module Turnstile
       module ViewHelpers
-        def devise_turnstile_scripts
-          return unless @_devise_turnstile_protected
-
-          nonce = content_security_policy_nonce if respond_to?(:content_security_policy_nonce)
-
-          javascript_include_tag(
-            "devise_cloudflare_turnstile",
-            defer: true,
-            nonce: nonce
-          )
-        end
-
         def devise_turnstile_meta_tag
+          return unless devise_turnstile_protected?
+
           site_key = ::Cloudflare::Turnstile::Rails.configuration.site_key
           return if site_key.nil? || site_key.empty?
 
-          tag.meta(name: "cf-turnstile-site-key", content: site_key)
+          tag.meta(name: 'cf-turnstile-site-key', content: site_key)
         end
 
-        def devise_turnstile_script_tag
-          script_url = ::Cloudflare::Turnstile::Rails.configuration.script_url
-          return if script_url.nil? || script_url.empty?
+        def devise_turnstile_scripts
+          return unless devise_turnstile_protected?
 
+          nonce = content_security_policy_nonce if respond_to?(:content_security_policy_nonce)
+
+          safe_join(
+            [
+              cloudflare_turnstile_loader(nonce),
+              cloudflare_turnstile_injector(nonce)
+            ],
+            "\n"
+          )
+        end
+
+        private
+
+        def devise_turnstile_protected?
+          @_devise_turnstile_protected
+        end
+
+        # Loads the cloudflare-turnstile-rails runtime, which fetches the
+        # Cloudflare script and renders/re-renders every ".cf-turnstile" widget
+        # (including CSP nonce and Turbo handling).
+        def cloudflare_turnstile_loader(nonce)
           javascript_include_tag(
-            script_url,
+            'cloudflare_turnstile_helper',
             async: true,
-            defer: true
+            defer: true,
+            nonce: nonce,
+            data: { 'script-url': ::Cloudflare::Turnstile::Rails.configuration.script_url }
+          )
+        end
+
+        # Injects a ".cf-turnstile" widget into every Devise form so no view
+        # changes are required; rendering is delegated to the runtime above.
+        def cloudflare_turnstile_injector(nonce)
+          javascript_include_tag(
+            'devise_cloudflare_turnstile',
+            defer: true,
+            nonce: nonce
           )
         end
       end
