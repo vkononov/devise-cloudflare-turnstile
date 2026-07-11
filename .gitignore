@@ -8,8 +8,9 @@
 /doc/
 /pkg/
 /spec/reports/
-/test/generators/tmp/
 /tmp/
+/test/generators/tmp/
+/test/tmp/
 
 Gemfile.lock
 gemfiles
@@ -17,3 +18,6 @@ gemfiles
 node_modules/
 package-lock.json
 yarn.lock
+
+# Local convenience clone of the foundational gem — not part of this package
+/cloudflare-turnstile-rails/

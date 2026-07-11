@@ -1,14 +1,11 @@
-# Devise 5 requires railties >= 7.0, so Rails 6 appraisals pin Devise 4.
 # Rails 6 is not exercised on Ruby 3.2+ (stdlib / compatibility gaps).
 if RUBY_VERSION < '3.2.0'
   appraise 'rails-6.0' do
     gem 'rails', '~> 6.0.0'
-    gem 'devise', '~> 4.9'
   end
 
   appraise 'rails-6.1' do
     gem 'rails', '~> 6.1.0'
-    gem 'devise', '~> 4.9'
   end
 end
 

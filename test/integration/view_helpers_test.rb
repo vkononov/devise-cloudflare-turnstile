@@ -13,7 +13,7 @@ class ViewHelpersTest < ActionDispatch::IntegrationTest
 
     assert_response :success
     assert_includes @response.body, '<meta name="cf-turnstile-site-key"'
-    assert_includes @response.body, 'content="1x00000000000000000000AA"'
+    assert_includes @response.body, 'content="SITEKEY"'
   end
 
   def test_scripts_load_the_cloudflare_turnstile_rails_runtime

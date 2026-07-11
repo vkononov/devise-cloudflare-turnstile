@@ -7,12 +7,14 @@ require 'rails'
 require 'action_controller/railtie'
 require 'action_view/railtie'
 require 'active_model'
+require 'rails/generators'
 
 require 'devise'
 require 'cloudflare/turnstile/rails'
 require 'devise/cloudflare/turnstile'
 
 require 'minitest/autorun'
+require 'webmock/minitest'
 
 module Dummy
   class Application < Rails::Application
@@ -41,8 +43,8 @@ end
 Rails.application.initialize!
 
 Cloudflare::Turnstile::Rails.configure do |config|
-  config.site_key = '1x00000000000000000000AA'
-  config.secret_key = '1x0000000000000000000000000000000AA'
+  config.site_key = 'SITEKEY'
+  config.secret_key = 'SECRETKEY'
 end
 
 class DummyResource
@@ -67,6 +69,8 @@ end
 class ConcernTestController < ActionController::Base
   include Devise::Cloudflare::Turnstile::ControllerConcern
 
+  append_view_path File.expand_path('fixtures/views', __dir__)
+
   attr_accessor :resource
 
   def resource_class
@@ -77,13 +81,9 @@ class ConcernTestController < ActionController::Base
     resource.clean_up_passwords if resource.respond_to?(:clean_up_passwords)
   end
 
-  def new
-    render plain: "new:#{@_devise_turnstile_protected.inspect}"
-  end
+  def new; end
 
-  def edit
-    render plain: "edit:#{@_devise_turnstile_protected.inspect}"
-  end
+  def edit; end
 
   def create
     render inline: ViewHelperTestController::TEMPLATE
@@ -98,7 +98,18 @@ Rails.application.routes.draw do
   post '/concern', to: 'concern_test#create'
 end
 
-module TurnstileConfig
+module TurnstileRequestHelpers
+  SITE_VERIFY_URL = 'https://challenges.cloudflare.com/turnstile/v0/siteverify'.freeze
+
+  def stub_siteverify(success:)
+    stub_request(:post, SITE_VERIFY_URL)
+      .to_return(
+        status: 200,
+        body: { 'success' => success, 'error-codes' => [] }.to_json,
+        headers: { 'Content-Type' => 'application/json' }
+      )
+  end
+
   def with_secret(secret)
     original = Cloudflare::Turnstile::Rails.configuration.secret_key
     Cloudflare::Turnstile::Rails.configuration.secret_key = secret

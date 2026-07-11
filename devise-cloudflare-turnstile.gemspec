@@ -15,12 +15,12 @@ Gem::Specification.new do |spec|
 
   spec.metadata['homepage_uri'] = spec.homepage
   spec.metadata['source_code_uri'] = spec.homepage
-  spec.metadata['changelog_uri'] = "#{spec.homepage}/blob/main/CHANGELOG.md"
+  spec.metadata['changelog_uri'] = "#{spec.homepage}/releases"
   spec.metadata['rubygems_mfa_required'] = 'true'
 
   # Ship only what the gem needs at runtime: library code, assets, generators,
-  # plus license/readme/changelog. Using an allowlist keeps tests, tooling, and
-  # CI config out of the package.
+  # plus license and readme. Using an allowlist keeps tests, tooling, and CI
+  # config out of the package.
   root_files = %w[LICENSE.txt README.md]
   spec.files = IO.popen(%w[git ls-files -z], chdir: __dir__, err: IO::NULL) do |ls|
     ls.readlines("\x0", chomp: true).select do |f|
