@@ -26,9 +26,7 @@ module Dummy
     # Rails 5.1+ Static middleware is keyword-only; MiddlewareStack forwards
     # options via *args, which breaks under Ruby 3. We do not need public
     # file serving in these tests.
-    if config.respond_to?(:public_file_server)
-      config.public_file_server.enabled = false
-    end
+    config.public_file_server.enabled = false if config.respond_to?(:public_file_server)
 
     # Rails 7.1+ uses a symbol; older versions expect a boolean.
     config.action_dispatch.show_exceptions = if Rails::VERSION::STRING >= '7.1'
