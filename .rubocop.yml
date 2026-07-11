@@ -1,8 +1,45 @@
+plugins:
+  - rubocop-md
+  - rubocop-minitest
+  - rubocop-performance
+  - rubocop-rake
+
 AllCops:
-  TargetRubyVersion: 3.1
+  TargetRubyVersion: 2.6.0
+  NewCops: enable
+  Exclude:
+    - .git/**/*
+    - node_modules/**/*
+    - vendor/bundle/**/*
 
-Style/StringLiterals:
-  EnforcedStyle: double_quotes
+Layout/IndentationConsistency:
+  Exclude:
+    - README.md
 
-Style/StringLiteralsInInterpolation:
-  EnforcedStyle: double_quotes
+Layout/InitialIndentation:
+  Exclude:
+    - README.md
+
+Layout/LineLength:
+  Max: 120
+  Exclude:
+    - devise-cloudflare-turnstile.gemspec
+
+Layout/SpaceInsideHashLiteralBraces:
+  Enabled: false
+
+Metrics/MethodLength:
+  Max: 12
+
+Minitest/MultipleAssertions:
+  Enabled: false
+
+Style/Documentation:
+  Enabled: false
+
+Style/EmptyElse:
+  Exclude:
+    - README.md
+
+Style/FrozenStringLiteralComment:
+  EnforcedStyle: never

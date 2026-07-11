@@ -1,0 +1,44 @@
+name: Lint
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    name: RuboCop & ESLint
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: 'ruby'
+          bundler-cache: true
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+
+      - name: Install npm dependencies
+        run: npm install
+
+      - name: Run linters
+        run: bin/lint --no-fix
+
+  # Single stable status check that summarises the job above, so branch
+  # protection can require one name ("Lint") that never changes.
+  lint-result:
+    name: Lint
+    if: always()
+    needs: lint
+    runs-on: ubuntu-latest
+    steps:
+      - name: Fail if any lint job did not succeed
+        if: needs.lint.result != 'success'
+        run: exit 1
