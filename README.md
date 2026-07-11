@@ -110,7 +110,7 @@ If you need to skip Turnstile protection for a specific controller, create a cus
 # app/controllers/users/confirmations_controller.rb
 module Users
   class ConfirmationsController < Devise::ConfirmationsController
-  skip_before_action :verify_cloudflare_turnstile!
+    skip_before_action :verify_cloudflare_turnstile!
   end
 end
 ```

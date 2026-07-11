@@ -17,7 +17,7 @@ module DeviseCloudflareTurnstile
       template 'cloudflare_turnstile.rb', 'config/initializers/cloudflare_turnstile.rb'
     end
 
-    def inject_into_layout
+    def inject_into_layout # rubocop:disable Metrics/MethodLength
       layout_file = 'app/views/layouts/application.html.erb'
 
       unless File.exist?(layout_file)
@@ -32,8 +32,8 @@ module DeviseCloudflareTurnstile
 
       inject_into_file layout_file, after: /<head>.*\n/i do
         <<-ERB
-    <%= devise_turnstile_meta_tag %>
-    <%= devise_turnstile_scripts %>
+          <%= devise_turnstile_meta_tag %>
+          <%= devise_turnstile_scripts %>
         ERB
       end
       say_status :inject, layout_file, :green

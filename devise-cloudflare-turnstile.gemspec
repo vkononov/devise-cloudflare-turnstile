@@ -11,7 +11,7 @@ Gem::Specification.new do |spec|
                      'Zero configuration required — just install and set your API keys.'
   spec.homepage = 'https://github.com/vkononov/devise-cloudflare-turnstile'
   spec.license = 'MIT'
-  spec.required_ruby_version = '>= 2.7.0'
+  spec.required_ruby_version = '>= 2.6.0'
 
   spec.metadata['homepage_uri'] = spec.homepage
   spec.metadata['source_code_uri'] = spec.homepage
@@ -21,7 +21,7 @@ Gem::Specification.new do |spec|
   # Ship only what the gem needs at runtime: library code, assets, generators,
   # plus license/readme/changelog. Using an allowlist keeps tests, tooling, and
   # CI config out of the package.
-  root_files = %w[LICENSE.txt README.md CHANGELOG.md]
+  root_files = %w[LICENSE.txt README.md]
   spec.files = IO.popen(%w[git ls-files -z], chdir: __dir__, err: IO::NULL) do |ls|
     ls.readlines("\x0", chomp: true).select do |f|
       f.start_with?('lib/', 'app/') || root_files.include?(f)

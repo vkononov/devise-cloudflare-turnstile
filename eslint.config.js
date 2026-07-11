@@ -9,7 +9,6 @@ export default [
       'vendor/**',
       'tmp/**',
       'test/generators/tmp/**',
-      'cloudflare-turnstile-rails/**',
       'eslint.config.js'
     ]
   },
