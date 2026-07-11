@@ -10,7 +10,7 @@ class InstallGeneratorTest < Rails::Generators::TestCase
     assert_raises(SystemExit) { run_generator }
   end
 
-  def test_creates_initializer_and_injects_layout_helpers
+  def test_creates_initializer_and_injects_layout_helpers # rubocop:disable Metrics/AbcSize, Metrics/MethodLength
     FileUtils.mkdir_p(File.join(destination_root, 'config/initializers'))
     FileUtils.mkdir_p(File.join(destination_root, 'app/views/layouts'))
     File.write(File.join(destination_root, 'config/initializers/devise.rb'), "# devise\n")
@@ -33,7 +33,7 @@ class InstallGeneratorTest < Rails::Generators::TestCase
     end
   end
 
-  def test_skips_layout_injection_when_already_configured
+  def test_skips_layout_injection_when_already_configured # rubocop:disable Metrics/AbcSize
     FileUtils.mkdir_p(File.join(destination_root, 'config/initializers'))
     FileUtils.mkdir_p(File.join(destination_root, 'app/views/layouts'))
     File.write(File.join(destination_root, 'config/initializers/devise.rb'), "# devise\n")
