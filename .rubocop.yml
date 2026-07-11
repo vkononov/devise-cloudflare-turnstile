@@ -5,15 +5,12 @@ plugins:
   - rubocop-rake
 
 AllCops:
-  TargetRubyVersion: 2.6
+  TargetRubyVersion: 2.6.0
   NewCops: enable
-  SuggestExtensions: false
   Exclude:
     - .git/**/*
     - node_modules/**/*
     - vendor/bundle/**/*
-    - cloudflare-turnstile-rails/**/*
-    - gemfiles/**/*
 
 Layout/IndentationConsistency:
   Exclude:
@@ -31,29 +28,11 @@ Layout/LineLength:
 Layout/SpaceInsideHashLiteralBraces:
   Enabled: false
 
-Layout/IndentationWidth:
-  Exclude:
-    - README.md
-
 Metrics/MethodLength:
   Max: 12
-  Exclude:
-    - lib/generators/**/*
-    - test/generators/**/*
-
-Metrics/AbcSize:
-  Exclude:
-    - lib/generators/**/*
-    - test/generators/**/*
 
 Minitest/MultipleAssertions:
   Enabled: false
-
-Naming/FileName:
-  Exclude:
-    - lib/devise-cloudflare-turnstile.rb
-    - README.md
-    - CHANGELOG.md
 
 Style/Documentation:
   Enabled: false
