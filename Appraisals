@@ -5,6 +5,7 @@ appraise 'rails-5.0' do
   if RUBY_VERSION >= '3.4.0'
     gem 'base64'
     gem 'mutex_m'
+    gem 'bigdecimal'
   end
 end
 
@@ -14,6 +15,7 @@ appraise 'rails-5.1' do
   if RUBY_VERSION >= '3.4.0'
     gem 'base64'
     gem 'mutex_m'
+    gem 'bigdecimal'
   end
 end
 
@@ -23,6 +25,7 @@ appraise 'rails-5.2' do
   if RUBY_VERSION >= '3.4.0'
     gem 'base64'
     gem 'mutex_m'
+    gem 'bigdecimal'
   end
 end
 
@@ -32,6 +35,7 @@ appraise 'rails-6.0' do
   if RUBY_VERSION >= '3.4.0'
     gem 'drb'
     gem 'mutex_m'
+    gem 'bigdecimal'
   end
 end
 
@@ -41,6 +45,7 @@ appraise 'rails-6.1' do
   if RUBY_VERSION >= '3.4.0'
     gem 'drb'
     gem 'mutex_m'
+    gem 'bigdecimal'
   end
 end
 
@@ -51,6 +56,7 @@ if RUBY_VERSION >= '2.7.0'
     if RUBY_VERSION >= '3.4.0'
       gem 'drb'
       gem 'mutex_m'
+      gem 'bigdecimal'
     end
   end
 
@@ -88,6 +94,7 @@ appraise 'devise-4.0' do
   if RUBY_VERSION >= '3.4.0'
     gem 'base64'
     gem 'mutex_m'
+    gem 'bigdecimal'
   end
 end
 
@@ -98,6 +105,7 @@ appraise 'devise-4.1' do
   if RUBY_VERSION >= '3.4.0'
     gem 'base64'
     gem 'mutex_m'
+    gem 'bigdecimal'
   end
 end
 
@@ -108,6 +116,7 @@ appraise 'devise-4.2' do
   if RUBY_VERSION >= '3.4.0'
     gem 'base64'
     gem 'mutex_m'
+    gem 'bigdecimal'
   end
 end
 
@@ -118,6 +127,7 @@ appraise 'devise-4.3' do
   if RUBY_VERSION >= '3.4.0'
     gem 'base64'
     gem 'mutex_m'
+    gem 'bigdecimal'
   end
 end
 
@@ -128,6 +138,7 @@ appraise 'devise-4.4' do
   if RUBY_VERSION >= '3.4.0'
     gem 'base64'
     gem 'mutex_m'
+    gem 'bigdecimal'
   end
 end
 
@@ -138,6 +149,7 @@ appraise 'devise-4.5' do
   if RUBY_VERSION >= '3.4.0'
     gem 'base64'
     gem 'mutex_m'
+    gem 'bigdecimal'
   end
 end
 
@@ -148,6 +160,7 @@ appraise 'devise-4.6' do
   if RUBY_VERSION >= '3.4.0'
     gem 'base64'
     gem 'mutex_m'
+    gem 'bigdecimal'
   end
 end
 
@@ -158,6 +171,7 @@ appraise 'devise-4.7' do
   if RUBY_VERSION >= '3.4.0'
     gem 'drb'
     gem 'mutex_m'
+    gem 'bigdecimal'
   end
 end
 
@@ -168,6 +182,7 @@ appraise 'devise-4.8' do
   if RUBY_VERSION >= '3.4.0'
     gem 'drb'
     gem 'mutex_m'
+    gem 'bigdecimal'
   end
 end
 

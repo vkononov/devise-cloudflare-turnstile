@@ -45,6 +45,6 @@ class SessionsControllerTest < ActionDispatch::IntegrationTest
 
     assert_response :unprocessable_entity
     assert_match(/cf-turnstile-site-key/, response.body)
-    assert_match(/#{Regexp.escape(Cloudflare::Turnstile::Rails::ErrorMessage.default)}/, response.body)
+    assert_match(/We could not verify that you/, response.body)
   end
 end

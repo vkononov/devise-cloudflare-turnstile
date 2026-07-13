@@ -32,7 +32,13 @@ class TurnstileEdgeCasesTest < ApplicationSystemTestCase
     Cloudflare::Turnstile::Rails.configuration.site_key = 'DUMMY'
     visit new_user_session_url
 
-    assert_no_selector "div.cf-turnstile input[name='cf-turnstile-response']", visible: :all, wait: 5
+    # Invalid keys may still inject an empty widget container; a successful
+    # dummy challenge token must not appear (matches foundational gem).
+    assert_no_selector(
+      "div.cf-turnstile input[name='cf-turnstile-response'][value*='DUMMY']",
+      visible: :all,
+      wait: 5
+    )
   end
 
   test 'turnstile returns an error when secret key is invalid' do
