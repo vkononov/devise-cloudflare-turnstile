@@ -45,7 +45,10 @@ RUBY
 
 # Pin sqlite3 for Rails 5 by replacing the generator line — appending a second
 # `gem 'sqlite3'` declaration makes Bundler reject the Gemfile.
-if Rails::VERSION::STRING.start_with?('5.')
+# Rails 5.0 activates sqlite3 ~> 1.3.6; a 1.4.x install then fails at boot.
+if Rails::VERSION::STRING.start_with?('5.0')
+  gsub_file 'Gemfile', /^\s*gem ['"]sqlite3['"].*$/, "gem 'sqlite3', '~> 1.3.6'"
+elsif Rails::VERSION::STRING.start_with?('5.')
   gsub_file 'Gemfile', /^\s*gem ['"]sqlite3['"].*$/, "gem 'sqlite3', '~> 1.3', '< 1.5'"
 end
 
