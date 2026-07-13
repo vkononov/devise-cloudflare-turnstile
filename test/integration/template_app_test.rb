@@ -49,6 +49,25 @@ module TemplateAppTest
         assert system('bundle', 'install', '--quiet'),
                '`bundle install` failed in generated app'
 
+        # `bundle exec rails new` keeps BUNDLE_GEMFILE on the appraisal, so
+        # Rails 6's post-generate `webpacker:install` cannot see the gem.
+        # Skip it during `rails new`, then install against the app bundle here.
+        if File.read('Gemfile').match?(/gem ['"]webpacker['"]/)
+          assert system('bin/rails', 'webpacker:install'),
+                 '`webpacker:install` failed in generated app'
+
+          # webpacker:install may recreate packs/application.js; re-apply the
+          # Turbolinks AJAX-cache helper the app template injects for Rails 6.
+          packer_js = 'app/javascript/packs/application.js'
+          ajax_src = File.expand_path('../../templates/shared/cloudflare_turbolinks_ajax_cache.js', __dir__)
+          if File.exist?(packer_js) && File.exist?(ajax_src)
+            FileUtils.cp(ajax_src, 'app/javascript/packs/cloudflare_turbolinks_ajax_cache.js')
+            unless File.read(packer_js).include?('cloudflare_turbolinks_ajax_cache')
+              File.open(packer_js, 'a') { |f| f.puts "\nimport './cloudflare_turbolinks_ajax_cache'\n" }
+            end
+          end
+        end
+
         db_cmd = if Gem::Version.new(Rails::VERSION::STRING) >= Gem::Version.new('6.0.0')
                    %w[bin/rails db:prepare]
                  else

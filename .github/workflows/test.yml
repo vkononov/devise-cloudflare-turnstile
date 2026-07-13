@@ -26,6 +26,12 @@ jobs:
           bundler-cache: true
       - name: Fix insecure world-writable gem directory
         run: sudo chmod +t "$(ruby -e 'puts Gem.dir')/gems"
+      - name: Set up Node (Webpacker / yarn for Rails 6 apps)
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Enable yarn
+        run: corepack enable && corepack prepare yarn@1.22.22 --activate
       - name: Install dependencies
         run: bundle install && bundle exec appraisal install
       - name: Run tests
