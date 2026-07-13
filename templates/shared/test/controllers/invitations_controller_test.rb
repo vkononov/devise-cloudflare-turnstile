@@ -17,13 +17,11 @@ class InvitationsControllerTest < ActionDispatch::IntegrationTest
       password_confirmation: 'Password1!',
       confirmed_at: Time.now.utc
     )
-
-    post user_session_url, params: {
-      user: { email: @inviter.email, password: 'Password1!' }
-    }
   end
 
   test 'GET invite renders turnstile head tags' do
+    sign_in_inviter!
+
     get new_user_invitation_url
 
     assert_response :success
@@ -32,12 +30,15 @@ class InvitationsControllerTest < ActionDispatch::IntegrationTest
   end
 
   test 'POST invite with auto-populated turnstile succeeds' do
+    sign_in_inviter!
+
     assert_difference('User.count', 1) do
       post user_invitation_url, params: { user: { email: 'invitee-controller@example.com' } }
     end
   end
 
   test 'POST invite with failing turnstile re-renders new' do
+    sign_in_inviter!
     Cloudflare::Turnstile::Rails.configuration.secret_key = '2x0000000000000000000000000000000AA'
 
     assert_no_difference('User.count') do
@@ -56,5 +57,13 @@ class InvitationsControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
     assert_match(/cf-turnstile-site-key/, response.body)
     assert_match(/devise_cloudflare_turnstile/, response.body)
+  end
+
+  private
+
+  def sign_in_inviter!
+    post user_session_url, params: {
+      user: { email: @inviter.email, password: 'Password1!' }
+    }
   end
 end
