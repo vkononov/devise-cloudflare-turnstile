@@ -6,12 +6,6 @@ class Rails6TemplateTest < Minitest::Test
 
   def setup
     skip unless RUBY_VERSION < '3.4.0' && Rails::VERSION::STRING.start_with?('6.')
-    # Devise-axis appraisals already cover the same Rails majors via rails-*.
-    # Re-running full browser suites there mainly stresses Firefox in CI.
-    skip if ENV.fetch('BUNDLE_GEMFILE', '').include?('devise_')
-    # Firefox + Rails 6 system suites have been unreliable in GHA (marionette
-    # crashes). Chrome still covers this Rails major.
-    skip if ENV.fetch('BROWSER', 'chrome') == 'firefox'
     setup_template_app
   end
 

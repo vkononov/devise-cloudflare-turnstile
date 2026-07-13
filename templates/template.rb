@@ -64,6 +64,7 @@ end
   app/models/user.rb
   app/views/layouts/application.html.erb
   app/views/pages/home.html.erb
+  app/views/pages/dual_forms.html.erb
   config/initializers/cloudflare_turnstile.rb
   config/initializers/devise.rb.tt
   config/initializers/content_security_policy.rb.tt
@@ -75,6 +76,10 @@ end
   test/controllers/sessions_controller_test.rb
   test/controllers/registrations_controller_test.rb
   test/controllers/passwords_controller_test.rb
+  test/controllers/confirmations_controller_test.rb
+  test/controllers/unlocks_controller_test.rb
+  test/controllers/invitations_controller_test.rb
+  test/controllers/pages_controller_test.rb
   test/system/sessions_test.rb
   test/system/registrations_test.rb
   test/system/passwords_test.rb
@@ -82,6 +87,7 @@ end
   test/system/unlocks_test.rb
   test/system/invitations_test.rb
   test/system/turnstile_edge_cases_test.rb
+  test/system/injector_behaviors_test.rb
 ].each do |shared_path|
   if shared_path.end_with?('.tt')
     template shared_path, shared_path.sub(/\.tt$/, ''), force: true
@@ -108,13 +114,22 @@ if File.exist?(packer_js)
   append_to_file packer_js, "\nimport './cloudflare_turbolinks_ajax_cache'\n"
 end
 
-# Rails 6 without Webpacker: keep Sprockets UJS only. Turbolinks is not required
-# for Devise form coverage and has been a source of Firefox/session flakes in CI.
+# Rails 6 without Webpacker: Turbolinks + UJS via Sprockets so AJAX-cache
+# behavior matches the foundational gem's Rails 6 coverage.
 if Rails::VERSION::MAJOR == 6 && !File.exist?(packer_js)
+  append_to_file 'Gemfile', <<~RUBY
+
+    gem 'turbolinks', '~> 5'
+  RUBY
+
   create_file 'app/assets/javascripts/application.js', <<~JS, force: true
     //= require rails-ujs
+    //= require turbolinks
     //= require_tree .
   JS
+
+  copy_file 'cloudflare_turbolinks_ajax_cache.js', 'app/assets/javascripts/cloudflare_turbolinks_ajax_cache.js',
+            force: true
 end
 
 # 6) Remove chromedriver-helper / stock webdrivers (path bugs with modern

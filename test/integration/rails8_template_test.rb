@@ -6,7 +6,6 @@ class Rails8TemplateTest < Minitest::Test
 
   def setup
     skip unless RUBY_VERSION >= '3.2.0' && Rails::VERSION::STRING.start_with?('8.')
-    skip if ENV.fetch('BUNDLE_GEMFILE', '').include?('devise_')
     setup_template_app
   end
 

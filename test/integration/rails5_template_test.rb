@@ -8,7 +8,6 @@ class Rails5TemplateTest < Minitest::Test
     # System tests need ActionDispatch::SystemTestCase (5.1+) and
     # :headless_chrome / :headless_firefox driver names (5.2+).
     skip unless RUBY_VERSION < '3.0.0' && Rails::VERSION::STRING.start_with?('5.2')
-    skip if ENV.fetch('BUNDLE_GEMFILE', '').include?('devise_')
     setup_template_app
   end
 
