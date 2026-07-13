@@ -1,6 +1,6 @@
 require 'test_helper'
 
-class SessionsControllerTest < ActionDispatch::IntegrationTest
+class PasswordsControllerTest < ActionDispatch::IntegrationTest
   include Rails.application.routes.url_helpers
 
   setup do
@@ -10,38 +10,34 @@ class SessionsControllerTest < ActionDispatch::IntegrationTest
     end
 
     @user = User.create!(
-      email: 'controller@example.com',
+      email: 'password-controller@example.com',
       password: 'Password1!',
       password_confirmation: 'Password1!',
       confirmed_at: Time.now.utc
     )
   end
 
-  test 'GET sign in renders turnstile widget container after scripts load path' do
-    get new_user_session_url
+  test 'GET forgot password renders turnstile head tags' do
+    get new_user_password_url
 
     assert_response :success
     assert_match(/cf-turnstile-site-key/, response.body)
     assert_match(/devise_cloudflare_turnstile/, response.body)
   end
 
-  test 'POST sign in with auto-populated turnstile succeeds' do
+  test 'POST forgot password with auto-populated turnstile succeeds' do
     Cloudflare::Turnstile::Rails.configuration.auto_populate_response_in_test_env = true
 
-    post user_session_url, params: {
-      user: { email: @user.email, password: 'Password1!' }
-    }
+    post user_password_url, params: { user: { email: @user.email } }
 
-    assert_redirected_to root_url
+    assert_redirected_to new_user_session_url
   end
 
-  test 'POST sign in with failing turnstile re-renders new' do
+  test 'POST forgot password with failing turnstile re-renders new' do
     Cloudflare::Turnstile::Rails.configuration.secret_key = '2x0000000000000000000000000000000AA'
     Cloudflare::Turnstile::Rails.configuration.auto_populate_response_in_test_env = true
 
-    post user_session_url, params: {
-      user: { email: @user.email, password: 'Password1!' }
-    }
+    post user_password_url, params: { user: { email: @user.email } }
 
     assert_response :unprocessable_entity
     assert_match(/cf-turnstile-site-key/, response.body)

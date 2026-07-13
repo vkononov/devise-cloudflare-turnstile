@@ -1,6 +1,8 @@
 require 'test_helper'
 
 class ViewHelpersTest < ActionDispatch::IntegrationTest
+  include TurnstileRequestHelpers
+
   def test_helpers_render_nothing_on_unprotected_pages
     get '/unprotected'
 
@@ -14,6 +16,16 @@ class ViewHelpersTest < ActionDispatch::IntegrationTest
     assert_response :success
     assert_includes @response.body, '<meta name="cf-turnstile-site-key"'
     assert_includes @response.body, 'content="SITEKEY"'
+  end
+
+  def test_meta_tag_is_omitted_when_site_key_blank
+    with_site_key('') do
+      get '/protected'
+
+      assert_response :success
+      refute_includes @response.body, 'cf-turnstile-site-key'
+      assert_includes @response.body, 'devise_cloudflare_turnstile'
+    end
   end
 
   def test_scripts_load_the_cloudflare_turnstile_rails_runtime

@@ -24,7 +24,6 @@ end
 
 group :test do
   gem 'minitest'
-  gem 'webmock'
 
   gem 'minitest-mock' if RUBY_VERSION >= '3.1.0'
 

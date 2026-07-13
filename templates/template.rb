@@ -73,12 +73,15 @@ end
   test/support/turnstile_system_helpers.rb
   test/support/devise_system_helpers.rb
   test/controllers/sessions_controller_test.rb
+  test/controllers/registrations_controller_test.rb
+  test/controllers/passwords_controller_test.rb
   test/system/sessions_test.rb
   test/system/registrations_test.rb
   test/system/passwords_test.rb
   test/system/confirmations_test.rb
   test/system/unlocks_test.rb
   test/system/invitations_test.rb
+  test/system/turnstile_edge_cases_test.rb
 ].each do |shared_path|
   if shared_path.end_with?('.tt')
     template shared_path, shared_path.sub(/\.tt$/, ''), force: true
