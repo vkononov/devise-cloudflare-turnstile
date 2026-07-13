@@ -38,14 +38,16 @@ append_to_file 'Gemfile', <<~RUBY
     gem 'psych', '< 4'
   end
 
-  #{if Rails::VERSION::STRING.start_with?('5.')
-      "gem 'sqlite3', '~> 1.3', '< 1.5'"
-    end}
-
   gem 'devise', '= #{devise_version}'
   gem 'devise_invitable', '= #{invitable_version}'
   gem 'devise-cloudflare-turnstile', path: #{gem_root.inspect}
 RUBY
+
+# Pin sqlite3 for Rails 5 by replacing the generator line — appending a second
+# `gem 'sqlite3'` declaration makes Bundler reject the Gemfile.
+if Rails::VERSION::STRING.start_with?('5.')
+  gsub_file 'Gemfile', /^\s*gem ['"]sqlite3['"].*$/, "gem 'sqlite3', '~> 1.3', '< 1.5'"
+end
 
 # 3) copy shared app files
 %w[
