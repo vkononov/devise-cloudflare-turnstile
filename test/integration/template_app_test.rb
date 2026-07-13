@@ -77,7 +77,14 @@ module TemplateAppTest
   def install_webpacker_if_needed!
     return unless File.read('Gemfile').match?(/gem ['"]webpacker['"]/)
 
-    assert system('bin/rails', 'webpacker:install'),
+    compat = File.expand_path('../support/ruby32_file_dir_exists_compat.rb', __dir__)
+    env = {}
+    if File.exist?(compat)
+      existing = ENV.fetch('RUBYOPT', '')
+      env['RUBYOPT'] = "#{existing} -r#{compat}".strip
+    end
+
+    assert system(env, 'bin/rails', 'webpacker:install'),
            '`webpacker:install` failed in generated app'
 
     # webpacker:install may recreate packs/application.js; re-apply the

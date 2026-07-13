@@ -5,7 +5,10 @@ class Rails5TemplateTest < Minitest::Test
   include TemplateAppTest
 
   def setup
-    skip unless RUBY_VERSION < '3.0.0' && Rails::VERSION::STRING.start_with?('5.')
+    # System tests require ActionDispatch::SystemTestCase (Rails 5.1+).
+    skip unless RUBY_VERSION < '3.0.0' &&
+                Rails::VERSION::STRING.start_with?('5.') &&
+                Gem::Version.new(Rails::VERSION::STRING) >= Gem::Version.new('5.1.0')
     setup_template_app
   end
 
