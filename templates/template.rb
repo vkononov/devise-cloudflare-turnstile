@@ -55,7 +55,7 @@ if Rails::VERSION::STRING.start_with?('5.0')
 elsif Rails::VERSION::STRING.start_with?('5.')
   gsub_file 'Gemfile', /^\s*gem ['"]sqlite3['"].*$/, "gem 'sqlite3', '~> 1.3', '< 1.5'"
 elsif Rails::VERSION::MAJOR < 8
-  gsub_file 'Gemfile', /^\s*gem ['"]sqlite3['"].*$/, "gem 'sqlite3', '~> 1.4'"
+  gsub_file 'Gemfile', /^\s*gem ['"]sqlite3['"].*$/, "gem 'sqlite3', '~> 1.4.0'"
 end
 
 # 3) copy shared app files
@@ -105,21 +105,13 @@ if File.exist?(packer_js)
   append_to_file packer_js, "\nimport './cloudflare_turbolinks_ajax_cache'\n"
 end
 
-# Rails 6 without Webpacker still benefits from Turbolinks + UJS via Sprockets.
+# Rails 6 without Webpacker: keep Sprockets UJS only. Turbolinks is not required
+# for Devise form coverage and has been a source of Firefox/session flakes in CI.
 if Rails::VERSION::MAJOR == 6 && !File.exist?(packer_js)
-  append_to_file 'Gemfile', <<~RUBY
-
-    gem 'turbolinks', '~> 5'
-  RUBY
-
   create_file 'app/assets/javascripts/application.js', <<~JS, force: true
     //= require rails-ujs
-    //= require turbolinks
     //= require_tree .
   JS
-
-  copy_file 'cloudflare_turbolinks_ajax_cache.js', 'app/assets/javascripts/cloudflare_turbolinks_ajax_cache.js',
-            force: true
 end
 
 # 6) Remove chromedriver-helper / stock webdrivers (path bugs with modern

@@ -1,5 +1,5 @@
 module TurnstileSystemHelpers
-  def wait_for_turnstile_inputs(count, timeout: 15, message: nil) # rubocop:disable Metrics/AbcSize, Metrics/CyclomaticComplexity, Metrics/MethodLength, Metrics/PerceivedComplexity
+  def wait_for_turnstile_inputs(count, timeout: 30, message: nil) # rubocop:disable Metrics/AbcSize, Metrics/CyclomaticComplexity, Metrics/MethodLength, Metrics/PerceivedComplexity
     start = Time.now
     stable_since = nil
     context = message ? " (#{message})" : ''

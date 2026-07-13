@@ -2,7 +2,7 @@
 Rails.application.configure do
   config.content_security_policy do |policy|
     policy.default_src :self
-    policy.script_src  :self
+    policy.script_src  :self, 'https://challenges.cloudflare.com'
     policy.style_src   :self, :unsafe_inline
     policy.connect_src :self, 'https://challenges.cloudflare.com'
     policy.frame_src   :self, 'https://challenges.cloudflare.com'
