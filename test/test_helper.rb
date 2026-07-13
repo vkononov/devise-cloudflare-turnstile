@@ -47,6 +47,38 @@ end
 
 Rails.application.initialize!
 
+# Rails 5.2 encrypted cookies are broken under Ruby 3: they pass positional
+# Hashes into keyword-only MessageEncryptor / Metadata APIs. Patch those
+# call sites so flash.now from Turnstile failures can commit a session.
+if RUBY_VERSION >= '3' && Rails::VERSION::MAJOR == 5 && Rails::VERSION::MINOR >= 2
+  ActiveSupport::Messages::Metadata.singleton_class.class_eval do
+    alias_method :wrap_without_ruby3_hash, :wrap
+
+    def wrap(message, *args, **kwargs)
+      kwargs = args.first.merge(kwargs) if args.first.is_a?(Hash)
+      wrap_without_ruby3_hash(message, **kwargs)
+    end
+  end
+
+  ActiveSupport::MessageEncryptor.class_eval do
+    alias_method :encrypt_and_sign_without_ruby3_hash, :encrypt_and_sign
+
+    def encrypt_and_sign(value, *args, **kwargs)
+      kwargs = args.first.merge(kwargs) if args.first.is_a?(Hash)
+      encrypt_and_sign_without_ruby3_hash(value, **kwargs)
+    end
+  end
+
+  ActiveSupport::MessageVerifier.class_eval do
+    alias_method :generate_without_ruby3_hash, :generate
+
+    def generate(value, *args, **kwargs)
+      kwargs = args.first.merge(kwargs) if args.first.is_a?(Hash)
+      generate_without_ruby3_hash(value, **kwargs)
+    end
+  end
+end
+
 # Rails 5.0's Integration RequestHelpers collect options via *args and then pass a
 # Hash positionally into keyword-only `process`, which breaks under Ruby 3's
 # keyword separation. Rails 5.1+ uses **args; mirror that for 5.0 in tests.
