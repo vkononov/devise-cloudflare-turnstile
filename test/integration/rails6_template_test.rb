@@ -6,6 +6,9 @@ class Rails6TemplateTest < Minitest::Test
 
   def setup
     skip unless RUBY_VERSION < '3.4.0' && Rails::VERSION::STRING.start_with?('6.')
+    # Firefox + Rails 6 system suites remain unreliable in GHA (marionette
+    # crashes). Chrome still covers this Rails major, including Turbolinks.
+    skip if ENV.fetch('BROWSER', 'chrome') == 'firefox'
     setup_template_app
   end
 
