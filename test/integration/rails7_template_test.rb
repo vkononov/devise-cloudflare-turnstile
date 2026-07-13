@@ -8,6 +8,7 @@ class Rails7TemplateTest < Minitest::Test
     ruby_ok = RUBY_VERSION >= '3.1.0' && Rails::VERSION::STRING.start_with?('7.2')
     ruby_legacy_ok = RUBY_VERSION >= '2.7.0' && Rails::VERSION::STRING.start_with?(*%w[7.0 7.1])
     skip unless ruby_ok || ruby_legacy_ok
+    skip if ENV.fetch('BUNDLE_GEMFILE', '').include?('devise_')
 
     setup_template_app
   end

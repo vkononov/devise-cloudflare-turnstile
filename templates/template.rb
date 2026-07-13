@@ -34,22 +34,28 @@ append_to_file 'Gemfile', <<~RUBY
       "gem 'rack', '< 3.0.0'"
     end}
 
-  if RUBY_VERSION >= '3.1.0'
-    gem 'psych', '< 4'
-  end
+  # Avoid Psych 4+ BadAlias with older Rails, and Psych 5 + stdlib Parser
+  # mismatches that break sqlite3's mini_portile extconf on Ruby <= 3.0.
+  #{unless Rails::VERSION::MAJOR >= 8
+      "gem 'psych', '< 4'"
+    end}
 
   gem 'devise', '= #{devise_version}'
   gem 'devise_invitable', '= #{invitable_version}'
   gem 'devise-cloudflare-turnstile', path: #{gem_root.inspect}
 RUBY
 
-# Pin sqlite3 for Rails 5 by replacing the generator line — appending a second
+# Pin sqlite3 by replacing the generator line — appending a second
 # `gem 'sqlite3'` declaration makes Bundler reject the Gemfile.
 # Rails 5.0 activates sqlite3 ~> 1.3.6; a 1.4.x install then fails at boot.
+# Rails 6/7 default Gemfiles can resolve to 1.7+/2.x packaged builds that fail
+# under older Rubies; 1.4.x uses system libsqlite3 instead.
 if Rails::VERSION::STRING.start_with?('5.0')
   gsub_file 'Gemfile', /^\s*gem ['"]sqlite3['"].*$/, "gem 'sqlite3', '~> 1.3.6'"
 elsif Rails::VERSION::STRING.start_with?('5.')
   gsub_file 'Gemfile', /^\s*gem ['"]sqlite3['"].*$/, "gem 'sqlite3', '~> 1.3', '< 1.5'"
+elsif Rails::VERSION::MAJOR < 8
+  gsub_file 'Gemfile', /^\s*gem ['"]sqlite3['"].*$/, "gem 'sqlite3', '~> 1.4'"
 end
 
 # 3) copy shared app files

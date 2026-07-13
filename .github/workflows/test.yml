@@ -27,6 +27,11 @@ jobs:
           bundler-cache: true
       - name: Fix insecure world-writable gem directory
         run: sudo chmod +t "$(ruby -e 'puts Gem.dir')/gems"
+      - name: Install sqlite headers for system sqlite3 builds
+        run: sudo apt-get update -qq && sudo apt-get install -y -qq libsqlite3-dev
+      - name: Enlarge /dev/shm for Firefox
+        if: matrix.browser == 'firefox'
+        run: sudo mount -o remount,size=2G /dev/shm
       - name: Set up Node (Webpacker / yarn for Rails 6 apps)
         uses: actions/setup-node@v4
         with:
@@ -39,6 +44,7 @@ jobs:
         run: bundle exec appraisal rake test
         env:
           BROWSER: ${{ matrix.browser }}
+          MOZ_HEADLESS: '1'
       - name: Upload screenshots on failure
         if: failure()
         uses: actions/upload-artifact@v4

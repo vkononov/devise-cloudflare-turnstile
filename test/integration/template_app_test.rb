@@ -12,6 +12,12 @@ module TemplateAppTest
   end
 
   def teardown_template_app
+    # Firefox/geckodriver can leave zombies after marionette crashes; subsequent
+    # appraisals then fail with InvalidSessionIdError / decode errors.
+    if ENV['CI'] && ENV.fetch('BROWSER', 'chrome') == 'firefox'
+      system('pkill -9 -f "(firefox|geckodriver)" >/dev/null 2>&1 || true')
+    end
+
     return unless instance_variable_defined?(:@tmpdir) && Dir.exist?(@tmpdir)
 
     screenshots_path = File.join(@tmpdir, 'tmp', 'screenshots')
