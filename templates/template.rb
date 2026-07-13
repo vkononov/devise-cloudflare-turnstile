@@ -91,7 +91,7 @@ gsub_file 'test/test_helper.rb', %r{require ['"]rails/test_help['"]\n}, <<~RUBY
   Dir[Rails.root.join('test/support/**/*.rb')].sort.each { |f| require f }
 RUBY
 
-# 5) Turbolinks AJAX-cache helper (Rails 6 / Webpacker)
+# 5) Turbolinks AJAX-cache helper (Rails 6 / Webpacker) — only when packs exist
 packer_js = 'app/javascript/packs/application.js'
 if File.exist?(packer_js)
   copy_file 'cloudflare_turbolinks_ajax_cache.js', 'app/javascript/packs/cloudflare_turbolinks_ajax_cache.js',
@@ -99,8 +99,25 @@ if File.exist?(packer_js)
   append_to_file packer_js, "\nimport './cloudflare_turbolinks_ajax_cache'\n"
 end
 
+# Rails 6 without Webpacker still benefits from Turbolinks + UJS via Sprockets.
+if Rails::VERSION::MAJOR == 6 && !File.exist?(packer_js)
+  append_to_file 'Gemfile', <<~RUBY
+
+    gem 'turbolinks', '~> 5'
+  RUBY
+
+  create_file 'app/assets/javascripts/application.js', <<~JS, force: true
+    //= require rails-ujs
+    //= require turbolinks
+    //= require_tree .
+  JS
+
+  copy_file 'cloudflare_turbolinks_ajax_cache.js', 'app/assets/javascripts/cloudflare_turbolinks_ajax_cache.js',
+            force: true
+end
+
 # 6) Remove chromedriver-helper / stock webdrivers (path bugs with modern
-# selenium-webdriver). Re-add webdrivers only for Rails 5.2.
+# selenium-webdriver). Re-add webdrivers for Rails 5.2 system tests.
 gsub_file 'Gemfile', /^\s*gem ['"]chromedriver-helper['"].*\n/, ''
 gsub_file 'Gemfile', /^\s*gem ['"]webdrivers['"].*\n/, ''
 append_to_file 'Gemfile', "\ngem 'webdrivers'\n" if Rails::VERSION::STRING.start_with?('5.2.')

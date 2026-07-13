@@ -5,10 +5,9 @@ class Rails5TemplateTest < Minitest::Test
   include TemplateAppTest
 
   def setup
-    # System tests require ActionDispatch::SystemTestCase (Rails 5.1+).
-    skip unless RUBY_VERSION < '3.0.0' &&
-                Rails::VERSION::STRING.start_with?('5.') &&
-                Gem::Version.new(Rails::VERSION::STRING) >= Gem::Version.new('5.1.0')
+    # System tests need ActionDispatch::SystemTestCase (5.1+) and
+    # :headless_chrome / :headless_firefox driver names (5.2+).
+    skip unless RUBY_VERSION < '3.0.0' && Rails::VERSION::STRING.start_with?('5.2')
     setup_template_app
   end
 

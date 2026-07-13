@@ -23,7 +23,7 @@ class Rails6TemplateTest < Minitest::Test
         --skip-active-job --skip-active-storage
         --skip-action-cable --skip-spring --skip-listen --skip-jbuilder
         --skip-bootsnap --skip-api
-        --skip-webpack-install
+        --skip-javascript
         -d sqlite3
       ],
       test_commands: [
