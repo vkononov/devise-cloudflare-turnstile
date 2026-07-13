@@ -77,18 +77,20 @@ module TemplateAppTest
   def install_webpacker_if_needed!
     return unless File.read('Gemfile').match?(/gem ['"]webpacker['"]/)
 
-    compat = File.expand_path('../support/ruby32_file_dir_exists_compat.rb', __dir__)
-    env = {}
-    if File.exist?(compat)
-      existing = ENV.fetch('RUBYOPT', '')
-      env['RUBYOPT'] = "#{existing} -r#{compat}".strip
-    end
-
-    assert system(env, 'bin/rails', 'webpacker:install'),
+    assert system(webpacker_install_env, 'bin/rails', 'webpacker:install'),
            '`webpacker:install` failed in generated app'
 
-    # webpacker:install may recreate packs/application.js; re-apply the
-    # Turbolinks AJAX-cache helper the app template injects for Rails 6.
+    restore_turbolinks_ajax_cache_pack!
+  end
+
+  def webpacker_install_env
+    compat = File.expand_path('../support/ruby32_file_dir_exists_compat.rb', __dir__)
+    return {} unless File.exist?(compat)
+
+    { 'RUBYOPT' => "#{ENV.fetch('RUBYOPT', '')} -r#{compat}".strip }
+  end
+
+  def restore_turbolinks_ajax_cache_pack!
     packer_js = 'app/javascript/packs/application.js'
     return unless File.exist?(packer_js) && File.exist?(TURBOLINKS_AJAX_CACHE)
 
