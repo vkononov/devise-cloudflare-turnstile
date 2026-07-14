@@ -11,10 +11,13 @@ module Devise
 
         private
 
-        def verify_cloudflare_turnstile!
+        def verify_cloudflare_turnstile! # rubocop:disable Metrics/AbcSize
           self.resource ||= resource_class.new
           return if valid_turnstile?(model: resource)
 
+          # Sessions (and some other Devise views) do not render resource errors.
+          # Always surface the failure via flash so the user sees feedback.
+          flash.now[:alert] = ::Cloudflare::Turnstile::Rails::ErrorMessage.default
           clean_up_passwords(resource) if respond_to?(:clean_up_passwords, true)
           set_minimum_password_length if respond_to?(:set_minimum_password_length, true)
           set_turnstile_page_marker

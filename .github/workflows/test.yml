@@ -11,10 +11,12 @@ on:
 jobs:
   test:
     runs-on: ubuntu-latest
-    name: Ruby ${{ matrix.ruby }}
+    name: Ruby ${{ matrix.ruby }} / ${{ matrix.browser }}
     strategy:
+      fail-fast: false
       matrix:
         ruby: [ '4.0', '3.4', '3.3', '3.2', '3.1', '3.0', '2.7', '2.6' ]
+        browser: [ 'chrome', 'firefox' ]
 
     steps:
       - uses: actions/checkout@v4
@@ -25,10 +27,31 @@ jobs:
           bundler-cache: true
       - name: Fix insecure world-writable gem directory
         run: sudo chmod +t "$(ruby -e 'puts Gem.dir')/gems"
+      - name: Install sqlite headers for system sqlite3 builds
+        run: sudo apt-get update -qq && sudo apt-get install -y -qq libsqlite3-dev
+      - name: Enlarge /dev/shm for Firefox
+        if: matrix.browser == 'firefox'
+        run: sudo mount -o remount,size=2G /dev/shm
+      - name: Set up Node (Webpacker / yarn for Rails 6 apps)
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Enable yarn
+        run: corepack enable && corepack prepare yarn@1.22.22 --activate
       - name: Install dependencies
         run: bundle install && bundle exec appraisal install
       - name: Run tests
         run: bundle exec appraisal rake test
+        env:
+          BROWSER: ${{ matrix.browser }}
+          MOZ_HEADLESS: '1'
+      - name: Upload screenshots on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: system-test-screenshots-${{ matrix.ruby }}-${{ matrix.browser }}
+          path: /tmp/screenshots
+          if-no-files-found: ignore
 
   # Single stable status check that summarises the whole matrix above, so
   # branch protection can require one name ("Test") instead of every cell.

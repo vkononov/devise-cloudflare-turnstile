@@ -48,4 +48,14 @@ class InstallGeneratorTest < Rails::Generators::TestCase
       assert_equal 1, content.scan('devise_turnstile_meta_tag').size
     end
   end
+
+  def test_skips_layout_injection_when_layout_missing
+    FileUtils.mkdir_p(File.join(destination_root, 'config/initializers'))
+    File.write(File.join(destination_root, 'config/initializers/devise.rb'), "# devise\n")
+
+    run_generator
+
+    assert_file 'config/initializers/cloudflare_turnstile.rb'
+    assert_no_file 'app/views/layouts/application.html.erb'
+  end
 end

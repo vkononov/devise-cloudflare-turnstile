@@ -14,7 +14,7 @@ require 'cloudflare/turnstile/rails'
 require 'devise/cloudflare/turnstile'
 
 require 'minitest/autorun'
-require 'webmock/minitest'
+require 'minitest/mock'
 
 module Dummy
   class Application < Rails::Application
@@ -47,6 +47,38 @@ end
 
 Rails.application.initialize!
 
+# Rails 5.2 encrypted cookies are broken under Ruby 3: they pass positional
+# Hashes into keyword-only MessageEncryptor / Metadata APIs. Patch those
+# call sites so flash.now from Turnstile failures can commit a session.
+if RUBY_VERSION >= '3' && Rails::VERSION::MAJOR == 5 && Rails::VERSION::MINOR >= 2
+  ActiveSupport::Messages::Metadata.singleton_class.class_eval do
+    alias_method :wrap_without_ruby3_hash, :wrap
+
+    def wrap(message, *args, **kwargs)
+      kwargs = args.first.merge(kwargs) if args.first.is_a?(Hash)
+      wrap_without_ruby3_hash(message, **kwargs)
+    end
+  end
+
+  ActiveSupport::MessageEncryptor.class_eval do
+    alias_method :encrypt_and_sign_without_ruby3_hash, :encrypt_and_sign
+
+    def encrypt_and_sign(value, *args, **kwargs)
+      kwargs = args.first.merge(kwargs) if args.first.is_a?(Hash)
+      encrypt_and_sign_without_ruby3_hash(value, **kwargs)
+    end
+  end
+
+  ActiveSupport::MessageVerifier.class_eval do
+    alias_method :generate_without_ruby3_hash, :generate
+
+    def generate(value, *args, **kwargs)
+      kwargs = args.first.merge(kwargs) if args.first.is_a?(Hash)
+      generate_without_ruby3_hash(value, **kwargs)
+    end
+  end
+end
+
 # Rails 5.0's Integration RequestHelpers collect options via *args and then pass a
 # Hash positionally into keyword-only `process`, which breaks under Ruby 3's
 # keyword separation. Rails 5.1+ uses **args; mirror that for 5.0 in tests.
@@ -72,7 +104,13 @@ end
 class DummyResource
   include ActiveModel::Model
 
-  def clean_up_passwords; end
+  class << self
+    attr_accessor :clean_up_calls
+  end
+
+  def clean_up_passwords
+    self.class.clean_up_calls = (self.class.clean_up_calls || 0) + 1
+  end
 end
 
 class ViewHelperTestController < ActionController::Base
@@ -93,7 +131,7 @@ class ConcernTestController < ActionController::Base
 
   append_view_path File.expand_path('fixtures/views', __dir__)
 
-  attr_accessor :resource
+  attr_accessor :resource, :minimum_password_length_set
 
   def resource_class
     DummyResource
@@ -101,6 +139,10 @@ class ConcernTestController < ActionController::Base
 
   def clean_up_passwords(resource)
     resource.clean_up_passwords if resource.respond_to?(:clean_up_passwords)
+  end
+
+  def set_minimum_password_length
+    @minimum_password_length_set = true
   end
 
   # Explicit render avoids Rails 5.0 + Ruby 3 breaking implicit template
@@ -116,6 +158,14 @@ class ConcernTestController < ActionController::Base
   def create
     render inline: ViewHelperTestController::TEMPLATE
   end
+
+  # Exercise the update failure branch (verify is normally only on create).
+  def update
+    verify_cloudflare_turnstile!
+    return if performed?
+
+    render template: 'concern_test/edit'
+  end
 end
 
 Rails.application.routes.draw do
@@ -124,18 +174,16 @@ Rails.application.routes.draw do
   get '/concern/new', to: 'concern_test#new'
   get '/concern/edit', to: 'concern_test#edit'
   post '/concern', to: 'concern_test#create'
+  patch '/concern', to: 'concern_test#update'
 end
 
 module TurnstileRequestHelpers
-  SITE_VERIFY_URL = 'https://challenges.cloudflare.com/turnstile/v0/siteverify'.freeze
-
-  def stub_siteverify(success:)
-    stub_request(:post, SITE_VERIFY_URL)
-      .to_return(
-        status: 200,
-        body: { 'success' => success, 'error-codes' => [] }.to_json,
-        headers: { 'Content-Type' => 'application/json' }
-      )
+  def stub_verification(success:, &block)
+    response = Cloudflare::Turnstile::Rails::VerificationResponse.new(
+      'success' => success,
+      'error-codes' => []
+    )
+    Cloudflare::Turnstile::Rails::Verification.stub(:verify, response, &block)
   end
 
   def with_secret(secret)
@@ -144,5 +192,13 @@ module TurnstileRequestHelpers
     yield
   ensure
     Cloudflare::Turnstile::Rails.configuration.secret_key = original
+  end
+
+  def with_site_key(site_key)
+    original = Cloudflare::Turnstile::Rails.configuration.site_key
+    Cloudflare::Turnstile::Rails.configuration.site_key = site_key
+    yield
+  ensure
+    Cloudflare::Turnstile::Rails.configuration.site_key = original
   end
 end

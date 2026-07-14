@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Devise Cloudflare Turnstile Test App</title>
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <%= csrf_meta_tags %>
+    <%= csp_meta_tag rescue nil %>
+    <%= devise_turnstile_meta_tag %>
+    <%= devise_turnstile_scripts %>
+    <%= stylesheet_link_tag 'application', media: 'all' rescue nil %>
+    <%= javascript_include_tag 'application' rescue nil %>
+    <%= javascript_pack_tag 'application' rescue nil %>
+    <%= javascript_importmap_tags rescue nil %>
+  </head>
+
+  <body>
+    <% if notice.present? %>
+      <p id="notice"><%= notice %></p>
+    <% end %>
+    <% if alert.present? %>
+      <p id="alert"><%= alert %></p>
+    <% end %>
+
+    <%= yield %>
+  </body>
+</html>
