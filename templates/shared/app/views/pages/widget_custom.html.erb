@@ -1,0 +1,10 @@
+<h1>Widget custom</h1>
+
+<%= form_tag('/', method: :post, id: 'form-plain') do %>
+  <%= submit_tag 'Submit plain' %>
+<% end %>
+
+<%= form_tag('/', method: :post, id: 'form-manual') do %>
+  <%= cloudflare_turnstile_tag data: { theme: 'light' } %>
+  <%= submit_tag 'Submit manual' %>
+<% end %>

@@ -1,3 +1,5 @@
+require 'json'
+
 module Devise
   module Cloudflare
     module Turnstile
@@ -11,7 +13,13 @@ module Devise
           # Use the positional tag(name, options) form for Rails 5.0 compatibility
           # (tag.meta builder API arrived in Rails 5.1). Pass options as a Hash
           # so Ruby 3 keyword separation does not break Rails 5.0's arity.
-          tag(:meta, { name: 'cf-turnstile-site-key', content: site_key })
+          safe_join(
+            [
+              tag(:meta, { name: 'cf-turnstile-site-key', content: site_key }),
+              devise_turnstile_default_data_meta_tag
+            ].compact,
+            "\n"
+          )
         end
 
         def devise_turnstile_scripts
@@ -32,6 +40,19 @@ module Devise
 
         def devise_turnstile_protected?
           @_devise_turnstile_protected
+        end
+
+        # Emits the configured default data attributes so the injector can apply
+        # them to auto-injected widgets. Procs are evaluated at render time,
+        # matching cloudflare-turnstile-rails' cloudflare_turnstile_tag behavior.
+        def devise_turnstile_default_data_meta_tag
+          data = ::Cloudflare::Turnstile::Rails.configuration.default_data || {}
+          resolved = data.each_with_object({}) do |(key, value), memo|
+            memo[key] = value.respond_to?(:call) ? value.call : value
+          end
+          return if resolved.empty?
+
+          tag(:meta, { name: 'cf-turnstile-default-data', content: JSON.generate(resolved) })
         end
 
         # Loads the cloudflare-turnstile-rails runtime, which fetches the

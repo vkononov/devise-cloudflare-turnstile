@@ -168,6 +168,86 @@ class ConcernTestController < ActionController::Base
   end
 end
 
+class SkipAllController < ActionController::Base
+  include Devise::Cloudflare::Turnstile::ControllerConcern
+
+  skip_turnstile
+
+  attr_accessor :resource
+
+  def resource_class
+    DummyResource
+  end
+
+  def new
+    render inline: ViewHelperTestController::TEMPLATE
+  end
+
+  def create
+    render inline: ViewHelperTestController::TEMPLATE
+  end
+end
+
+class SkipOnlyCreateController < ActionController::Base
+  include Devise::Cloudflare::Turnstile::ControllerConcern
+
+  skip_turnstile only: :create
+
+  attr_accessor :resource
+
+  def resource_class
+    DummyResource
+  end
+
+  def new
+    render inline: ViewHelperTestController::TEMPLATE
+  end
+
+  def create
+    render inline: ViewHelperTestController::TEMPLATE
+  end
+end
+
+class SkipExceptCreateController < ActionController::Base
+  include Devise::Cloudflare::Turnstile::ControllerConcern
+
+  skip_turnstile except: :create
+
+  attr_accessor :resource
+
+  def resource_class
+    DummyResource
+  end
+
+  def new
+    render inline: ViewHelperTestController::TEMPLATE
+  end
+
+  def create
+    render inline: ViewHelperTestController::TEMPLATE
+  end
+end
+
+class VerifyOptionsController < ActionController::Base
+  include Devise::Cloudflare::Turnstile::ControllerConcern
+
+  attr_accessor :resource
+
+  def resource_class
+    DummyResource
+  end
+
+  def create
+    render inline: ViewHelperTestController::TEMPLATE
+  end
+
+  private
+
+  def turnstile_verify_options
+    { remoteip: '9.9.9.9' }
+  end
+end
+
 Rails.application.routes.draw do
   get '/protected', to: 'view_helper_test#protected_action'
   get '/unprotected', to: 'view_helper_test#unprotected_action'
@@ -175,6 +255,13 @@ Rails.application.routes.draw do
   get '/concern/edit', to: 'concern_test#edit'
   post '/concern', to: 'concern_test#create'
   patch '/concern', to: 'concern_test#update'
+  get '/skip_all/new', to: 'skip_all#new'
+  post '/skip_all', to: 'skip_all#create'
+  get '/skip_only/new', to: 'skip_only_create#new'
+  post '/skip_only', to: 'skip_only_create#create'
+  get '/skip_except/new', to: 'skip_except_create#new'
+  post '/skip_except', to: 'skip_except_create#create'
+  post '/verify_options', to: 'verify_options#create'
 end
 
 module TurnstileRequestHelpers
@@ -200,5 +287,30 @@ module TurnstileRequestHelpers
     yield
   ensure
     Cloudflare::Turnstile::Rails.configuration.site_key = original
+  end
+
+  def with_devise_skip(*controllers, **actions)
+    Devise::Cloudflare::Turnstile.configuration.skip(*controllers, **actions)
+    yield
+  ensure
+    Devise::Cloudflare::Turnstile.configuration.skips.clear
+  end
+
+  def with_default_data(data)
+    original = Cloudflare::Turnstile::Rails.configuration.default_data
+    Cloudflare::Turnstile::Rails.configuration.default_data = data
+    yield
+  ensure
+    Cloudflare::Turnstile::Rails.configuration.default_data = original
+  end
+
+  def capture_turnstile_verify_args(&block)
+    captured = {}
+    fake = lambda do |**kwargs|
+      captured = kwargs
+      Cloudflare::Turnstile::Rails::VerificationResponse.new('success' => true, 'error-codes' => [])
+    end
+    Cloudflare::Turnstile::Rails::Verification.stub(:verify, fake, &block)
+    captured
   end
 end

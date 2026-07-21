@@ -29,6 +29,6 @@ Gem::Specification.new do |spec|
   end
   spec.require_paths = ['lib']
 
-  spec.add_dependency 'cloudflare-turnstile-rails', '>= 1.0'
+  spec.add_dependency 'cloudflare-turnstile-rails', '>= 1.1'
   spec.add_dependency 'devise', '>= 4.0'
 end

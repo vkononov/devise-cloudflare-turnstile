@@ -52,4 +52,22 @@ class ViewHelpersTest < ActionDispatch::IntegrationTest
     assert_equal 2, nonces.size, 'expected both script tags to carry a nonce'
     assert_equal %w[test-nonce test-nonce], nonces
   end
+
+  def test_default_data_meta_is_omitted_when_not_configured
+    get '/protected'
+
+    assert_response :success
+    refute_includes @response.body, 'cf-turnstile-default-data'
+  end
+
+  def test_default_data_meta_exposes_resolved_values
+    with_default_data(theme: 'dark', language: -> { 'fr' }) do
+      get '/protected'
+
+      assert_response :success
+      assert_includes @response.body, '<meta name="cf-turnstile-default-data"'
+      assert_includes @response.body, 'dark'
+      assert_includes @response.body, 'fr'
+    end
+  end
 end

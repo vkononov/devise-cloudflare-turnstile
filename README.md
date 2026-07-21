@@ -19,6 +19,7 @@ Supports **Rails 5.0 → latest** and **Ruby 2.6 → latest**, with the full Rai
 
 * **Zero view changes**: Auto-injects the Turnstile widget into Devise forms via JavaScript.
 * **Automatic controller protection**: Verifies Turnstile on every Devise `create` action.
+* **Configurable**: Skip protection per controller or action, and customize widget appearance globally.
 * **Works with Devise extensions**: Compatible with gems like devise-invitable out of the box.
 * **Delegates to cloudflare-turnstile-rails**: Verification, script loading, CSP nonces, Turbo remounting, and i18n error messages.
 * **Turbo & Turbolinks compatible**: Widget reappears after validation-error re-renders.
@@ -32,6 +33,9 @@ Supports **Rails 5.0 → latest** and **Ruby 2.6 → latest**, with the full Rai
   - [How It Works](#how-it-works)
   - [Layout Requirements](#layout-requirements)
 - [Skipping Protection](#skipping-protection)
+- [Customizing the Widget](#customizing-the-widget)
+- [Passing Extra Verification Parameters](#passing-extra-verification-parameters)
+- [How Protection Is Applied](#how-protection-is-applied)
 - [Automated Testing of Your Integration](#automated-testing-of-your-integration)
 - [Development](#development)
   - [Setup](#setup)
@@ -104,13 +108,34 @@ The install generator adds these helpers to your layout's `<head>`:
 
 ## Skipping Protection
 
-If you need to skip Turnstile protection for a specific controller, create a custom controller:
+Both the widget and server-side verification are applied per Devise action. You can disable them globally from the initializer or per controller.
+
+### Via configuration
+
+Skip whole controllers or specific actions without creating custom controllers:
 
 ```ruby
-# app/controllers/users/confirmations_controller.rb
+# config/initializers/cloudflare_turnstile.rb
+Devise::Cloudflare::Turnstile.configure do |config|
+  config.skip :confirmations            # every action
+  config.skip passwords: :create        # a single action
+  config.skip unlocks: [:new, :create]  # a set of actions
+end
+```
+
+Controller keys match Devise's `controller_name` (`sessions`, `registrations`, `passwords`, `confirmations`, `unlocks`, `invitations`).
+
+### Via controller macro
+
+If you already subclass a Devise controller, use the `skip_turnstile` macro:
+
+```ruby
+# app/controllers/users/passwords_controller.rb
 module Users
-  class ConfirmationsController < Devise::ConfirmationsController
-    skip_before_action :verify_cloudflare_turnstile!
+  class PasswordsController < Devise::PasswordsController
+    skip_turnstile                 # every action
+    # skip_turnstile only: :create # a subset
+    # skip_turnstile except: :new  # everything but a subset
   end
 end
 ```
@@ -118,8 +143,60 @@ end
 Then update your routes:
 
 ```ruby
-devise_for :users, controllers: { confirmations: 'users/confirmations' }
+devise_for :users, controllers: { passwords: 'users/passwords' }
 ```
+
+Skipping an action suppresses both the widget injection and the server-side check for that action.
+
+## Customizing the Widget
+
+Widget appearance (theme, language, size, and any other Cloudflare `data-*` option) is configured once in the initializer via the foundational gem's `config.default_data`. These defaults are applied to every auto-injected Devise widget:
+
+```ruby
+# config/initializers/cloudflare_turnstile.rb
+Cloudflare::Turnstile::Rails.configure do |config|
+  config.default_data = {
+    theme: 'dark',
+    language: -> { I18n.locale }
+  }
+end
+```
+
+To use invisible or managed widgets everywhere, configure the matching widget type on your Cloudflare site key — that choice is made in the Cloudflare dashboard, not in code.
+
+For a single form that needs different options, render a widget yourself in a custom Devise view using `cloudflare_turnstile_tag`. The injector skips any form that already contains a `.cf-turnstile` element, so your manual widget wins:
+
+```erb
+<%# app/views/users/sessions/new.html.erb %>
+<%= cloudflare_turnstile_tag data: { theme: 'light' } %>
+```
+
+## Passing Extra Verification Parameters
+
+To forward additional siteverify parameters (e.g. `remoteip`, `idempotency_key`) to Cloudflare, override `turnstile_verify_options` in a custom Devise controller:
+
+```ruby
+module Users
+  class SessionsController < Devise::SessionsController
+    private
+
+    def turnstile_verify_options
+      { remoteip: request.remote_ip }
+    end
+  end
+end
+```
+
+## How Protection Is Applied
+
+| Situation | Behavior |
+|-----------|----------|
+| No custom controllers | All Devise controllers are protected automatically |
+| Custom controller with `skip_turnstile` (or config `skip`) | That controller/action opts out of both widget and verification |
+| No custom views | Devise's default views render; the widget still injects |
+| Custom view without a widget | The widget is still injected before the submit button |
+| Custom view with `cloudflare_turnstile_tag` | Your widget is used as-is; nothing is auto-injected |
+| Invisible vs visible widget | Determined by the site key's widget type in the Cloudflare dashboard |
 
 ## Automated Testing of Your Integration
 
