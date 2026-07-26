@@ -7,7 +7,7 @@
 [![Lint](https://img.shields.io/github/actions/workflow/status/vkononov/devise-cloudflare-turnstile/lint.yml?branch=main&label=Lint&logo=github)](https://github.com/vkononov/devise-cloudflare-turnstile/actions/workflows/lint.yml)
 [![License](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
 
-Automatically protect all Devise authentication forms with Cloudflare Turnstile. Zero configuration required — just install and set your API keys.
+Automatically protect all Devise authentication forms with Cloudflare Turnstile. Add two helper tags to your layout, set your API keys, and every Devise form is protected — no changes to your Devise views or controllers.
 
 Built on [cloudflare-turnstile-rails](https://github.com/vkononov/cloudflare-turnstile-rails) for verification, widget rendering, CSP nonces, and Turbo support.
 
@@ -17,13 +17,11 @@ Supports **Rails 5.0 → latest** and **Ruby 2.6 → latest**, with the full Rai
 
 ## Features
 
-* **Zero view changes**: Auto-injects the Turnstile widget into Devise forms via JavaScript.
-* **Automatic controller protection**: Verifies Turnstile on every Devise `create` action.
-* **Configurable**: Skip protection per controller or action, and customize widget appearance globally.
-* **Works with Devise extensions**: Compatible with gems like devise-invitable out of the box.
-* **Delegates to cloudflare-turnstile-rails**: Verification, script loading, CSP nonces, Turbo remounting, and i18n error messages.
-* **Turbo & Turbolinks compatible**: Widget reappears after validation-error re-renders.
-* **CSP nonce support**: Honours Rails' `content_security_policy_nonce`.
+* **No Devise view changes**: Auto-injects the Turnstile widget into Devise forms via JavaScript.
+* **Automatic verification**: Checks Turnstile on every Devise `create` action.
+* **Configurable**: Skip protection per controller or action, and set widget appearance globally.
+* **Plays well with your stack**: Devise extensions (e.g. devise-invitable), Turbo/Turbolinks re-renders, and CSP nonces all work out of the box.
+* **Built on [cloudflare-turnstile-rails](https://github.com/vkononov/cloudflare-turnstile-rails)**: verification, script loading, and i18n error messages.
 
 ## Table of Contents
 
@@ -31,7 +29,6 @@ Supports **Rails 5.0 → latest** and **Ruby 2.6 → latest**, with the full Rai
   - [Installation](#installation)
   - [Getting API Keys](#getting-api-keys)
   - [How It Works](#how-it-works)
-  - [Layout Requirements](#layout-requirements)
 - [Skipping Protection](#skipping-protection)
 - [Customizing the Widget](#customizing-the-widget)
 - [Passing Extra Verification Parameters](#passing-extra-verification-parameters)
@@ -54,12 +51,21 @@ Add the gem to your Gemfile:
 gem 'devise-cloudflare-turnstile'
 ```
 
-Run the installer:
+Run bundle and the installer, which creates `config/initializers/cloudflare_turnstile.rb`:
 
 ```bash
 bundle install
 bin/rails generate devise_cloudflare_turnstile:install
 ```
+
+Add these two helpers to your layout's `<head>` (e.g. `app/views/layouts/application.html.erb`):
+
+```erb
+<%= devise_turnstile_meta_tag %>
+<%= devise_turnstile_scripts %>
+```
+
+Both render nothing on non-Devise pages, so they are safe to keep in a shared layout.
 
 Set your Cloudflare Turnstile credentials via environment variables:
 
@@ -68,7 +74,7 @@ export CLOUDFLARE_TURNSTILE_SITE_KEY=your_site_key
 export CLOUDFLARE_TURNSTILE_SECRET_KEY=your_secret_key
 ```
 
-That's it! All Devise forms are now protected.
+That's it — all Devise forms are now protected.
 
 ### Getting API Keys
 
@@ -78,33 +84,10 @@ That's it! All Devise forms are now protected.
 
 ### How It Works
 
-#### Controller Protection
+* **Controller** — a `before_action` on every Devise controller verifies the Turnstile response on `create` and re-renders the form with an error if it fails.
+* **View** — on Devise form pages, the two layout helpers emit the site key and load the injector JavaScript, which adds a `cf-turnstile` widget before each submit button.
 
-The gem automatically includes a `before_action` on all Devise controllers that:
-
-1. Validates the Turnstile response on `create` actions using `cloudflare-turnstile-rails`
-2. Re-renders the form with errors if validation fails
-
-#### View Integration
-
-On Devise form actions (`new`, `edit`, and failed `create`/`update` re-renders), the gem marks the page for Turnstile protection. The included JavaScript:
-
-1. Detects forms on protected pages
-2. Injects a standard `cf-turnstile` widget before submit buttons
-
-Rendering the widget, loading the Cloudflare script, CSP nonce handling, and Turbo/Turbolinks re-initialization are delegated to the `cloudflare-turnstile-rails` runtime.
-
-### Layout Requirements
-
-The install generator adds these helpers to your layout's `<head>`:
-
-```erb
-<%= devise_turnstile_meta_tag %>
-<%= devise_turnstile_scripts %>
-```
-
-* `devise_turnstile_meta_tag` — Outputs the site key for the injector (only on Devise pages)
-* `devise_turnstile_scripts` — Loads the `cloudflare-turnstile-rails` runtime and the auto-inject JavaScript (only on Devise pages)
+Widget rendering, script loading, CSP nonces, and Turbo/Turbolinks handling are delegated to [cloudflare-turnstile-rails](https://github.com/vkononov/cloudflare-turnstile-rails).
 
 ## Skipping Protection
 
