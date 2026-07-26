@@ -12,13 +12,6 @@ AllCops:
     - node_modules/**/*
     - vendor/bundle/**/*
 
-Layout/ExtraSpacing:
-  inherit_mode:
-    merge:
-      - Exclude
-  Exclude:
-    - README.md
-
 Layout/IndentationConsistency:
   Exclude:
     - README.md

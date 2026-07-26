@@ -133,7 +133,7 @@ If you already subclass a Devise controller, use the `skip_turnstile` macro:
 # app/controllers/users/passwords_controller.rb
 module Users
   class PasswordsController < Devise::PasswordsController
-    skip_turnstile                 # every action
+    skip_turnstile # every action
     # skip_turnstile only: :create # a subset
     # skip_turnstile except: :new  # everything but a subset
   end
