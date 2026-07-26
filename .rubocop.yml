@@ -50,10 +50,3 @@ Style/OneClassPerFile:
       - Exclude
   Exclude:
     - README.md
-
-Style/SymbolArray:
-  inherit_mode:
-    merge:
-      - Exclude
-  Exclude:
-    - README.md
