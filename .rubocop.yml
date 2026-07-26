@@ -12,6 +12,13 @@ AllCops:
     - node_modules/**/*
     - vendor/bundle/**/*
 
+Layout/ExtraSpacing:
+  inherit_mode:
+    merge:
+      - Exclude
+  Exclude:
+    - README.md
+
 Layout/IndentationConsistency:
   Exclude:
     - README.md
@@ -43,3 +50,17 @@ Style/EmptyElse:
 
 Style/FrozenStringLiteralComment:
   EnforcedStyle: never
+
+Style/OneClassPerFile:
+  inherit_mode:
+    merge:
+      - Exclude
+  Exclude:
+    - README.md
+
+Style/SymbolArray:
+  inherit_mode:
+    merge:
+      - Exclude
+  Exclude:
+    - README.md
