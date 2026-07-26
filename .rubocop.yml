@@ -43,3 +43,10 @@ Style/EmptyElse:
 
 Style/FrozenStringLiteralComment:
   EnforcedStyle: never
+
+Style/OneClassPerFile:
+  inherit_mode:
+    merge:
+      - Exclude
+  Exclude:
+    - README.md

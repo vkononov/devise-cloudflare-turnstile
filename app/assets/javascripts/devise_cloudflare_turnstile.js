@@ -9,6 +9,40 @@
     return meta && meta.content ? meta.content : null;
   }
 
+  function defaultData() {
+    var meta = document.querySelector('meta[name="cf-turnstile-default-data"]');
+
+    if (!meta || !meta.content) {
+      return {};
+    }
+
+    try {
+      return JSON.parse(meta.content) || {};
+    }
+    catch (e) {
+      // eslint-disable-next-line no-console
+      console.warn('devise-cloudflare-turnstile: invalid default data', e);
+
+      return {};
+    }
+  }
+
+  function applyDefaultData(widget) {
+    var data = defaultData();
+    var key;
+    var value;
+
+    for (key in data) {
+      if (Object.prototype.hasOwnProperty.call(data, key) && key !== 'sitekey') {
+        value = data[key];
+
+        if (value !== null && typeof value !== 'undefined') {
+          widget.setAttribute('data-' + key, value);
+        }
+      }
+    }
+  }
+
   function renderWidget(widget) {
     if (widget.dataset.initialized || widget.childElementCount > 0) {
       return;
@@ -55,6 +89,7 @@
 
         widget = document.createElement('div');
         widget.className = WIDGET_CLASS;
+        applyDefaultData(widget);
         widget.setAttribute('data-sitekey', key);
         submit.parentNode.insertBefore(widget, submit);
       }

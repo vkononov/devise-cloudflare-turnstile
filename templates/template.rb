@@ -65,6 +65,7 @@ end
   app/views/layouts/application.html.erb
   app/views/pages/home.html.erb
   app/views/pages/dual_forms.html.erb
+  app/views/pages/widget_custom.html.erb
   config/initializers/cloudflare_turnstile.rb
   config/initializers/devise.rb.tt
   config/initializers/content_security_policy.rb.tt
@@ -88,6 +89,7 @@ end
   test/system/invitations_test.rb
   test/system/turnstile_edge_cases_test.rb
   test/system/injector_behaviors_test.rb
+  test/system/widget_customization_test.rb
 ].each do |shared_path|
   if shared_path.end_with?('.tt')
     template shared_path, shared_path.sub(/\.tt$/, ''), force: true

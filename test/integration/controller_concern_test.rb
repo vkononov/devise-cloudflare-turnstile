@@ -1,6 +1,6 @@
 require 'test_helper'
 
-class ControllerConcernRequestTest < ActionDispatch::IntegrationTest
+class ControllerConcernRequestTest < ActionDispatch::IntegrationTest # rubocop:disable Metrics/ClassLength
   include TurnstileRequestHelpers
 
   def setup
@@ -77,5 +77,69 @@ class ControllerConcernRequestTest < ActionDispatch::IntegrationTest
       assert_match(/alert:We could not verify that you/, @response.body)
       assert_includes @response.body, 'name="cf-turnstile-site-key"'
     end
+  end
+
+  def test_config_skip_action_suppresses_verification
+    with_devise_skip(concern_test: :create) do
+      with_secret('') do
+        post '/concern'
+
+        assert_response :success
+      end
+    end
+  end
+
+  def test_config_skip_action_suppresses_page_marker
+    with_devise_skip(concern_test: :new) do
+      get '/concern/new'
+
+      assert_response :success
+      refute_includes @response.body, 'marked:true'
+    end
+  end
+
+  def test_macro_skip_all_suppresses_marker_and_verification
+    with_secret('') do
+      get '/skip_all/new'
+
+      assert_response :success
+      refute_includes @response.body, 'cf-turnstile-site-key'
+
+      post '/skip_all'
+
+      assert_response :success
+    end
+  end
+
+  def test_macro_skip_only_create_leaves_other_actions_protected
+    with_secret('') do
+      get '/skip_only/new'
+
+      assert_response :success
+      assert_includes @response.body, 'cf-turnstile-site-key'
+
+      post '/skip_only'
+
+      assert_response :success
+    end
+  end
+
+  def test_macro_skip_except_create_still_verifies_create
+    get '/skip_except/new'
+
+    assert_response :success
+    refute_includes @response.body, 'cf-turnstile-site-key'
+
+    with_secret('') do
+      assert_raises(Cloudflare::Turnstile::Rails::ConfigurationError) do
+        post '/skip_except'
+      end
+    end
+  end
+
+  def test_verify_options_are_forwarded_to_verification
+    captured = capture_turnstile_verify_args { post '/verify_options' }
+
+    assert_equal '9.9.9.9', captured[:remoteip]
   end
 end

@@ -5,15 +5,36 @@ module Devise
         extend ActiveSupport::Concern
 
         included do
+          # class_attribute's `default:` keyword arrived in Rails 5.2, so set it
+          # explicitly to keep Rails 5.0/5.1 compatibility.
+          class_attribute :_turnstile_skip_rules, instance_accessor: false
+          self._turnstile_skip_rules = []
+
           before_action :verify_cloudflare_turnstile!, only: :create
           before_action :set_turnstile_page_marker, if: :turnstile_form_action?
+        end
+
+        module ClassMethods
+          # Disables Turnstile for this controller.
+          #
+          #   skip_turnstile                 # every action
+          #   skip_turnstile only: :create   # a subset
+          #   skip_turnstile except: :new    # everything but a subset
+          def skip_turnstile(only: nil, except: nil)
+            self._turnstile_skip_rules += [{
+              only: Array(only).map(&:to_s),
+              except: Array(except).map(&:to_s)
+            }]
+          end
         end
 
         private
 
         def verify_cloudflare_turnstile! # rubocop:disable Metrics/AbcSize
+          return if turnstile_skipped?
+
           self.resource ||= resource_class.new
-          return if valid_turnstile?(model: resource)
+          return if valid_turnstile?(model: resource, **turnstile_verify_options)
 
           # Sessions (and some other Devise views) do not render resource errors.
           # Always surface the failure via flash so the user sees feedback.
@@ -24,6 +45,12 @@ module Devise
           render turnstile_failure_action, status: :unprocessable_entity
         end
 
+        # Extra siteverify parameters forwarded to valid_turnstile?. Override in a
+        # custom Devise controller to add e.g. remoteip: request.remote_ip.
+        def turnstile_verify_options
+          {}
+        end
+
         def set_turnstile_page_marker
           @_devise_turnstile_protected = true
         end
@@ -32,7 +59,22 @@ module Devise
         # still emit the Turnstile meta tag and scripts. Without this, Turbo
         # merges a head that omits them and the widget never comes back.
         def turnstile_form_action?
+          return false if turnstile_skipped?
+
           action_name.in?(%w[new edit create update])
+        end
+
+        def turnstile_skipped?
+          return true if ::Devise::Cloudflare::Turnstile.configuration.skipped?(controller_name, action_name)
+
+          self.class._turnstile_skip_rules.any? { |rule| turnstile_rule_matches?(rule) }
+        end
+
+        def turnstile_rule_matches?(rule)
+          return false if rule[:except].include?(action_name)
+          return true if rule[:only].empty?
+
+          rule[:only].include?(action_name)
         end
 
         def turnstile_failure_action
