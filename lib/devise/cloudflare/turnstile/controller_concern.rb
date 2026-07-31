@@ -65,7 +65,7 @@ module Devise
         end
 
         def turnstile_skipped?
-          return true if ::Devise::Cloudflare::Turnstile.configuration.skipped?(controller_name, action_name)
+          return true if ::Cloudflare::Turnstile::Rails.configuration.skipped?(controller_name, action_name)
 
           self.class._turnstile_skip_rules.any? { |rule| turnstile_rule_matches?(rule) }
         end

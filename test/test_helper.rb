@@ -290,10 +290,10 @@ module TurnstileRequestHelpers
   end
 
   def with_devise_skip(*controllers, **actions)
-    Devise::Cloudflare::Turnstile.configuration.skip(*controllers, **actions)
+    Cloudflare::Turnstile::Rails.configuration.skip(*controllers, **actions)
     yield
   ensure
-    Devise::Cloudflare::Turnstile.configuration.skips.clear
+    Cloudflare::Turnstile::Rails.configuration.skips.clear
   end
 
   def with_default_data(data)

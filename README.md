@@ -99,7 +99,9 @@ Skip whole controllers or specific actions without creating custom controllers:
 
 ```ruby
 # config/initializers/cloudflare_turnstile.rb
-Devise::Cloudflare::Turnstile.configure do |config|
+Cloudflare::Turnstile::Rails.configure do |config|
+  # ...site_key, secret_key, etc...
+
   config.skip :confirmations            # every action
   config.skip passwords: :create        # a single action
   config.skip unlocks: %i[new create]   # a set of actions
