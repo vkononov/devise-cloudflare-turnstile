@@ -7,8 +7,8 @@ Gem::Specification.new do |spec|
   spec.email = ['vadim@konoson.com']
 
   spec.summary = 'Cloudflare Turnstile integration for Devise'
-  spec.description = 'Automatically protect all Devise authentication forms with Cloudflare Turnstile. ' \
-                     'Zero configuration required — just install and set your API keys.'
+  spec.description = 'Automatically protect Devise authentication forms with Cloudflare Turnstile, ' \
+                     'without changing your Devise views or controllers.'
   spec.homepage = 'https://github.com/vkononov/devise-cloudflare-turnstile'
   spec.license = 'MIT'
   spec.required_ruby_version = '>= 2.6.0'
