@@ -10,7 +10,7 @@ class WidgetCustomizationTest < ApplicationSystemTestCase
 
   teardown do
     Cloudflare::Turnstile::Rails.configuration.default_data = {}
-    Devise::Cloudflare::Turnstile.configuration.skips.clear
+    Cloudflare::Turnstile::Rails.configuration.skips.clear
   end
 
   test 'default data attributes are applied to auto-injected widgets' do
@@ -35,7 +35,7 @@ class WidgetCustomizationTest < ApplicationSystemTestCase
   end
 
   test 'a skipped devise controller renders no widget' do
-    Devise::Cloudflare::Turnstile.configure { |config| config.skip :sessions }
+    Cloudflare::Turnstile::Rails.configure { |config| config.skip :sessions }
 
     visit new_user_session_url
 
