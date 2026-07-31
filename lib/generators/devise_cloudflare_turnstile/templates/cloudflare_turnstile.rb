@@ -9,11 +9,15 @@ Cloudflare::Turnstile::Rails.configure do |config|
 
   # Optional: Default data-* attributes applied to every auto-injected widget
   # (and every cloudflare_turnstile_tag). Values may be a proc, evaluated at
-  # render time. See the cloudflare-turnstile-rails README for all options.
+  # render time.
   # config.default_data = {
   #   theme: 'auto',
   #   language: -> { I18n.locale }
   # }
+
+  # This is the configuration object from cloudflare-turnstile-rails, which
+  # powers this gem. For all other available options, see its README:
+  # https://github.com/vkononov/cloudflare-turnstile-rails
 end
 
 # Optional: Disable Turnstile for specific Devise controllers or actions.
