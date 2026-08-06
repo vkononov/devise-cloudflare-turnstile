@@ -1,1 +1,1 @@
-marked:<%= !!@_devise_turnstile_protected %>|alert:<%= flash[:alert] %>|pwdlen:<%= !!@minimum_password_length_set %>|<%= devise_turnstile_meta_tag %>|<%= devise_turnstile_scripts %>
+marked:<%= !!@_devise_turnstile_protected %>|alert:<%= flash[:alert] %>|pwdlen:<%= !!@minimum_password_length_set %>|email:<%= @resource&.email %>|name:<%= @resource&.name %>|pwd:<%= @resource&.password %>|pwdconf:<%= @resource&.password_confirmation %>|curpwd:<%= @resource&.current_password %>|<%= devise_turnstile_meta_tag %>|<%= devise_turnstile_scripts %>

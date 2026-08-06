@@ -36,6 +36,8 @@ module Devise
           self.resource ||= resource_class.new
           return if valid_turnstile?(model: resource, **turnstile_verify_options)
 
+          restore_turnstile_submitted_values
+
           # Sessions (and some other Devise views) do not render resource errors.
           # Always surface the failure via flash so the user sees feedback.
           flash.now[:alert] = ::Cloudflare::Turnstile::Rails::ErrorMessage.default
@@ -43,6 +45,34 @@ module Devise
           set_minimum_password_length if respond_to?(:set_minimum_password_length, true)
           set_turnstile_page_marker
           render turnstile_failure_action, status: :unprocessable_entity
+        end
+
+        # Re-populate the resource with the values the user just submitted (minus
+        # passwords) so the re-rendered form keeps their input. We fail in a
+        # before_action, before Devise builds the resource from params, so
+        # without this the form would come back blank. Assigning to the
+        # in-memory resource is safe because the request halts here and the
+        # record is never saved.
+        def restore_turnstile_submitted_values
+          return unless respond_to?(:resource_name, true)
+
+          submitted = params[resource_name]
+          return unless submitted.respond_to?(:each_pair)
+
+          submitted.each_pair do |field, value|
+            next if field.to_s.include?('password')
+            next unless turnstile_scalar_value?(value)
+
+            setter = "#{field}="
+            resource.public_send(setter, value) if resource.respond_to?(setter)
+          end
+        end
+
+        # Limits restoration to simple form values. Nested params (e.g. arrays or
+        # *_attributes hashes) are skipped because assigning them to the resource
+        # is error-prone, and Devise forms only use scalar fields anyway.
+        def turnstile_scalar_value?(value)
+          value.is_a?(String) || value.is_a?(Numeric) || [true, false].include?(value)
         end
 
         # Extra siteverify parameters forwarded to valid_turnstile?. Override in a

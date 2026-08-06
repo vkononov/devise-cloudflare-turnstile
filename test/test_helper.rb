@@ -79,16 +79,20 @@ if RUBY_VERSION >= '3' && Rails::VERSION::MAJOR == 5 && Rails::VERSION::MINOR >=
   end
 end
 
-# Rails 5.0's Integration RequestHelpers collect options via *args and then pass a
-# Hash positionally into keyword-only `process`, which breaks under Ruby 3's
-# keyword separation. Rails 5.1+ uses **args; mirror that for 5.0 in tests.
-if Rails::VERSION::MAJOR == 5 && Rails::VERSION::MINOR.zero?
+# On Rails 5.x the Runner's get/post helpers collect their arguments with *args
+# and forward them to the session, so the request options (e.g. params:) arrive
+# as a trailing positional Hash rather than keywords. Under Ruby 3's keyword
+# separation that Hash can no longer flow into keyword-only `process` (6.0+
+# marks the delegation with ruby2_keywords, so only Rails 5 needs this). Accept
+# the options either positionally or as keywords and forward them as keywords.
+if Rails::VERSION::MAJOR == 5
   module ActionDispatch
     module Integration
       module RequestHelpers
         %i[get post patch put head delete].each do |http_method|
-          define_method(http_method) do |path, **args|
-            process(http_method, path, **args)
+          define_method(http_method) do |path, *args, **kwargs|
+            options = args.first || kwargs
+            process(http_method, path, **options)
           end
         end
       end
@@ -103,6 +107,8 @@ end
 
 class DummyResource
   include ActiveModel::Model
+
+  attr_accessor :email, :name, :password, :password_confirmation, :current_password
 
   class << self
     attr_accessor :clean_up_calls
@@ -135,6 +141,10 @@ class ConcernTestController < ActionController::Base
 
   def resource_class
     DummyResource
+  end
+
+  def resource_name
+    :dummy_resource
   end
 
   def clean_up_passwords(resource)
