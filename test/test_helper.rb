@@ -104,6 +104,8 @@ end
 class DummyResource
   include ActiveModel::Model
 
+  attr_accessor :email, :name, :password, :password_confirmation, :current_password
+
   class << self
     attr_accessor :clean_up_calls
   end
@@ -135,6 +137,10 @@ class ConcernTestController < ActionController::Base
 
   def resource_class
     DummyResource
+  end
+
+  def resource_name
+    :dummy_resource
   end
 
   def clean_up_passwords(resource)

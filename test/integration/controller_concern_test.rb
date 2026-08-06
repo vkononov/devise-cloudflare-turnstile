@@ -67,6 +67,33 @@ class ControllerConcernRequestTest < ActionDispatch::IntegrationTest # rubocop:d
     end
   end
 
+  def test_failed_turnstile_preserves_submitted_values_except_password_family
+    submitted = {
+      email: 'keep@example.com', name: 'Ada',
+      password: 'topsecret', password_confirmation: 'topsecret', current_password: 'topsecret'
+    }
+
+    stub_verification(success: false) do
+      post '/concern', params: { dummy_resource: submitted }
+
+      assert_response :unprocessable_entity
+      assert_includes @response.body, 'email:keep@example.com|name:Ada|pwd:|pwdconf:|curpwd:|'
+      refute_includes @response.body, 'topsecret'
+    end
+  end
+
+  def test_failed_turnstile_ignores_non_scalar_and_unknown_fields
+    submitted = { email: 'ok@example.com', name: { nested: 'x' }, roles: %w[a b], nickname: 'no-setter' }
+
+    stub_verification(success: false) do
+      post '/concern', params: { dummy_resource: submitted }
+
+      assert_response :unprocessable_entity
+      assert_includes @response.body, 'email:ok@example.com'
+      assert_includes @response.body, 'name:|'
+    end
+  end
+
   def test_failed_turnstile_on_update_re_renders_edit
     stub_verification(success: false) do
       patch '/concern'
@@ -76,6 +103,19 @@ class ControllerConcernRequestTest < ActionDispatch::IntegrationTest # rubocop:d
       assert_includes @response.body, 'action:edit'
       assert_match(/alert:We could not verify that you/, @response.body)
       assert_includes @response.body, 'name="cf-turnstile-site-key"'
+    end
+  end
+
+  def test_failed_turnstile_on_update_preserves_submitted_values
+    stub_verification(success: false) do
+      patch '/concern', params: {
+        dummy_resource: { email: 'edit@example.com', current_password: 'oldsecret' }
+      }
+
+      assert_response :unprocessable_entity
+      assert_includes @response.body, 'action:edit'
+      assert_includes @response.body, 'email:edit@example.com'
+      refute_includes @response.body, 'oldsecret'
     end
   end
 

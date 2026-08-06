@@ -52,4 +52,19 @@ class RegistrationsTest < ApplicationSystemTestCase
       wait_for_turnstile_inputs(1)
     end
   end
+
+  test 'failing turnstile re-renders the form with the submitted email preserved' do
+    with_failing_turnstile do
+      visit new_user_registration_url
+      wait_for_turnstile_inputs(1)
+      fill_in 'Email', with: 'preserve@example.com'
+      fill_in 'Password', with: PASSWORD
+      fill_in 'Password confirmation', with: PASSWORD
+      click_on 'Sign up'
+
+      assert_text Cloudflare::Turnstile::Rails::ErrorMessage.default
+      assert_field 'Email', with: 'preserve@example.com'
+      assert_field 'Password', with: ''
+    end
+  end
 end
