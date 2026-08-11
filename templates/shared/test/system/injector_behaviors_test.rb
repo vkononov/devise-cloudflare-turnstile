@@ -8,7 +8,7 @@ class InjectorBehaviorsTest < ApplicationSystemTestCase
     end
   end
 
-  test 'injector renders widgets on two forms' do
+  test 'injector renders widgets on two forms but skips button_to action buttons' do
     skip "Not supported in Github actions for Ruby v#{RUBY_VERSION}" if RUBY_VERSION < '2.7.0' && ENV['CI']
 
     visit dual_forms_url
@@ -16,6 +16,8 @@ class InjectorBehaviorsTest < ApplicationSystemTestCase
 
     assert_selector 'form#form-one div.cf-turnstile', count: 1, visible: :all
     assert_selector 'form#form-two div.cf-turnstile', count: 1, visible: :all
+    assert_selector 'form.button_to', count: 1, visible: :all
+    assert_no_selector 'form.button_to div.cf-turnstile', visible: :all
   end
 
   test 'turbolinks AJAX cache updates page when server returns HTML for remote form' do # rubocop:disable Metrics/BlockLength

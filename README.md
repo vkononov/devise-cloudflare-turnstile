@@ -85,7 +85,7 @@ That's it — all Devise forms are now protected.
 ### How It Works
 
 * **Controller** — a `before_action` on every Devise controller verifies the Turnstile response on `create` and re-renders the form with an error if it fails.
-* **View** — on Devise form pages, the two layout helpers emit the site key and load the injector JavaScript, which adds a `cf-turnstile` widget before each submit button.
+* **View** — on Devise form pages, the two layout helpers emit the site key and load the injector JavaScript, which adds a `cf-turnstile` widget before each submit button. Rails `button_to` action buttons (e.g. OAuth sign-in or log out) are skipped.
 
 Widget rendering, script loading, CSP nonces, and Turbo/Turbolinks handling are delegated to [cloudflare-turnstile-rails](https://github.com/vkononov/cloudflare-turnstile-rails).
 
@@ -179,7 +179,7 @@ end
 | No custom controllers | All Devise controllers are protected automatically |
 | Custom controller with `skip_turnstile` (or config `skip`) | That controller/action opts out of both widget and verification |
 | No custom views | Devise's default views render; the widget still injects |
-| Custom view without a widget | The widget is still injected before the submit button |
+| Custom view without a widget | The widget is injected before the submit button; Rails `button_to` action buttons are skipped |
 | Custom view with `cloudflare_turnstile_tag` | Your widget is used as-is; nothing is auto-injected |
 | Invisible vs visible widget | Determined by the site key's widget type in the Cloudflare dashboard |
 

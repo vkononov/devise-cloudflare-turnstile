@@ -74,7 +74,12 @@
       return;
     }
 
-    forms = document.querySelectorAll('form[method="post"], form[method="POST"]');
+    /*
+     * Skip Rails button_to forms (rendered with class "button_to"), such as
+     * OAuth sign-in, log out, or delete buttons. They are action buttons, not
+     * user-input forms, so they should never get a Turnstile widget.
+     */
+    forms = document.querySelectorAll('form[method="post"]:not(.button_to), form[method="POST"]:not(.button_to)');
 
     for (i = 0; i < forms.length; i++) {
       form = forms[i];
