@@ -35,6 +35,11 @@ module Dummy
                                                false
                                              end
 
+    # Modern Rails apps enable this. With it on, a Devise controller without a
+    # create action (e.g. OmniauthCallbacksController) would raise if our
+    # callback were registered with `only: :create` instead of `if:`.
+    config.action_controller.raise_on_missing_callback_actions = true if Rails::VERSION::STRING >= '7.1'
+
     if config.respond_to?(:content_security_policy)
       config.content_security_policy_nonce_generator = ->(_request) { 'test-nonce' }
       config.content_security_policy_nonce_directives = %w[script-src]
@@ -258,6 +263,21 @@ class VerifyOptionsController < ActionController::Base
   end
 end
 
+# Mirrors Devise::OmniauthCallbacksController, which has no create action.
+class OmniauthLikeController < ActionController::Base
+  include Devise::Cloudflare::Turnstile::ControllerConcern
+
+  attr_accessor :resource
+
+  def resource_class
+    DummyResource
+  end
+
+  def callback
+    render inline: 'ok'
+  end
+end
+
 Rails.application.routes.draw do
   get '/protected', to: 'view_helper_test#protected_action'
   get '/unprotected', to: 'view_helper_test#unprotected_action'
@@ -272,6 +292,7 @@ Rails.application.routes.draw do
   get '/skip_except/new', to: 'skip_except_create#new'
   post '/skip_except', to: 'skip_except_create#create'
   post '/verify_options', to: 'verify_options#create'
+  get '/omniauth_like', to: 'omniauth_like#callback'
 end
 
 module TurnstileRequestHelpers
