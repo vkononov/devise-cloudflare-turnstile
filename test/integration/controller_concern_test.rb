@@ -17,11 +17,38 @@ class ControllerConcernRequestTest < ActionDispatch::IntegrationTest # rubocop:d
     assert_includes @response.body, 'devise_cloudflare_turnstile'
   end
 
-  def test_edit_marks_the_page
+  def test_edit_not_marked_by_default
     get '/concern/edit'
 
     assert_response :success
-    assert_includes @response.body, 'marked:true'
+    refute_includes @response.body, 'marked:true'
+    refute_includes @response.body, 'cf-turnstile-site-key'
+  end
+
+  def test_edit_marks_the_page_when_update_is_protected
+    with_protected_actions(%w[create update]) do
+      get '/concern/edit'
+
+      assert_response :success
+      assert_includes @response.body, 'marked:true'
+      assert_includes @response.body, 'name="cf-turnstile-site-key"'
+    end
+  end
+
+  def test_controller_without_create_action_does_not_raise
+    get '/omniauth_like'
+
+    assert_response :success
+    assert_equal 'ok', @response.body
+  end
+
+  def test_update_is_not_verified_by_default
+    with_secret('') do
+      patch '/concern'
+
+      assert_response :success
+      refute_includes @response.body, 'marked:true'
+    end
   end
 
   def test_create_is_verified
@@ -95,27 +122,31 @@ class ControllerConcernRequestTest < ActionDispatch::IntegrationTest # rubocop:d
   end
 
   def test_failed_turnstile_on_update_re_renders_edit
-    stub_verification(success: false) do
-      patch '/concern'
+    with_protected_actions(%w[create update]) do
+      stub_verification(success: false) do
+        patch '/concern'
 
-      assert_response :unprocessable_entity
-      assert_includes @response.body, 'marked:true'
-      assert_includes @response.body, 'action:edit'
-      assert_match(/alert:We could not verify that you/, @response.body)
-      assert_includes @response.body, 'name="cf-turnstile-site-key"'
+        assert_response :unprocessable_entity
+        assert_includes @response.body, 'marked:true'
+        assert_includes @response.body, 'action:edit'
+        assert_match(/alert:We could not verify that you/, @response.body)
+        assert_includes @response.body, 'name="cf-turnstile-site-key"'
+      end
     end
   end
 
   def test_failed_turnstile_on_update_preserves_submitted_values
-    stub_verification(success: false) do
-      patch '/concern', params: {
-        dummy_resource: { email: 'edit@example.com', current_password: 'oldsecret' }
-      }
+    with_protected_actions(%w[create update]) do
+      stub_verification(success: false) do
+        patch '/concern', params: {
+          dummy_resource: { email: 'edit@example.com', current_password: 'oldsecret' }
+        }
 
-      assert_response :unprocessable_entity
-      assert_includes @response.body, 'action:edit'
-      assert_includes @response.body, 'email:edit@example.com'
-      refute_includes @response.body, 'oldsecret'
+        assert_response :unprocessable_entity
+        assert_includes @response.body, 'action:edit'
+        assert_includes @response.body, 'email:edit@example.com'
+        refute_includes @response.body, 'oldsecret'
+      end
     end
   end
 

@@ -38,13 +38,14 @@ class PasswordsTest < ApplicationSystemTestCase
     end
   end
 
-  # Password reset update is not Turnstile-verified (create-only). Assert the
-  # widget is injected on the edit form so the UI still matches other Devise pages.
-  test 'reset password edit page renders turnstile widget' do
+  # Password reset completion is an update action, which is not protected by
+  # default (create-only scope), so no widget is injected on the edit form.
+  test 'reset password edit page has no turnstile widget by default' do
     raw = @user.send(:set_reset_password_token)
     visit edit_user_password_url(reset_password_token: raw)
-    wait_for_turnstile_inputs(1)
 
-    assert_turnstile_widget
+    assert_selector "input[type='password']", visible: :all, wait: 5
+    assert_no_selector 'div.cf-turnstile', visible: :all
+    assert_no_selector "meta[name='cf-turnstile-site-key']", visible: :all
   end
 end

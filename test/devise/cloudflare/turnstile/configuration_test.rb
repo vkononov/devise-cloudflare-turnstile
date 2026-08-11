@@ -9,6 +9,16 @@ class ConfigurationTest < Minitest::Test
     refute @config.skipped?('sessions', 'create')
   end
 
+  def test_protected_actions_default_to_create
+    assert_equal %w[create], @config.protected_actions
+  end
+
+  def test_protected_actions_setter_normalizes_to_strings
+    @config.protected_actions = %i[create update]
+
+    assert_equal %w[create update], @config.protected_actions
+  end
+
   def test_skip_whole_controller
     @config.skip :confirmations
 

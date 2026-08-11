@@ -7,6 +7,18 @@ module Cloudflare
   module Turnstile
     module Rails
       class Configuration
+        # The Devise controller actions Turnstile protects. Defaults to the
+        # create actions (sign in, sign up, password-reset request, resend
+        # confirmation/unlock) which are the unauthenticated entry points. Add
+        # 'update' to also cover password-reset completion and account updates.
+        def protected_actions
+          @protected_actions ||= %w[create]
+        end
+
+        def protected_actions=(actions)
+          @protected_actions = Array(actions).map(&:to_s)
+        end
+
         def skips
           @skips ||= {}
         end

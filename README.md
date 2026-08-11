@@ -29,6 +29,7 @@ Supports **Rails 5.0 → latest** and **Ruby 2.6 → latest**, with the full Rai
   - [Installation](#installation)
   - [Getting API Keys](#getting-api-keys)
   - [How It Works](#how-it-works)
+- [Choosing Protected Actions](#choosing-protected-actions)
 - [Skipping Protection](#skipping-protection)
 - [Customizing the Widget](#customizing-the-widget)
 - [Passing Extra Verification Parameters](#passing-extra-verification-parameters)
@@ -84,10 +85,28 @@ That's it — all Devise forms are now protected.
 
 ### How It Works
 
-* **Controller** — a `before_action` on every Devise controller verifies the Turnstile response on `create` and re-renders the form with an error if it fails.
-* **View** — on Devise form pages, the two layout helpers emit the site key and load the injector JavaScript, which adds a `cf-turnstile` widget before each submit button.
+* **Controller** — a `before_action` on every Devise controller verifies the Turnstile response on the protected actions (`create` by default) and re-renders the form with an error if it fails.
+* **View** — on Devise form pages, the two layout helpers emit the site key and load the injector JavaScript, which adds a `cf-turnstile` widget before the submit button of each form that has an input.
 
 Widget rendering, script loading, CSP nonces, and Turbo/Turbolinks handling are delegated to [cloudflare-turnstile-rails](https://github.com/vkononov/cloudflare-turnstile-rails).
+
+## Choosing Protected Actions
+
+By default Turnstile protects only the `create` actions — sign in, sign up, password-reset request, and resend confirmation/unlock — which are the unauthenticated entry points. The widget appears on those forms (and their `new` pages) and nowhere else, so authenticated pages such as account settings stay untouched.
+
+To protect additional actions, set `config.protected_actions`:
+
+```ruby
+# config/initializers/cloudflare_turnstile.rb
+Cloudflare::Turnstile::Rails.configure do |config|
+  # ...site_key, secret_key, etc...
+
+  # Also protect password-reset completion and account updates.
+  config.protected_actions = %w[create update]
+end
+```
+
+For each protected action the widget also renders on the page that shows its form (`new` for `create`, `edit` for `update`).
 
 ## Skipping Protection
 
@@ -176,10 +195,11 @@ end
 
 | Situation | Behavior |
 |-----------|----------|
-| No custom controllers | All Devise controllers are protected automatically |
+| No custom controllers | All Devise controllers are protected automatically on the create actions |
+| Authenticated actions (e.g. account edit) | Not protected by default; add them to `config.protected_actions` |
 | Custom controller with `skip_turnstile` (or config `skip`) | That controller/action opts out of both widget and verification |
 | No custom views | Devise's default views render; the widget still injects |
-| Custom view without a widget | The widget is still injected before the submit button |
+| Custom view without a widget | The widget is injected before the submit button of forms that have an input |
 | Custom view with `cloudflare_turnstile_tag` | Your widget is used as-is; nothing is auto-injected |
 | Invisible vs visible widget | Determined by the site key's widget type in the Cloudflare dashboard |
 

@@ -50,13 +50,14 @@ class InvitationsControllerTest < ActionDispatch::IntegrationTest
     assert_match(/We could not verify that you/, response.body)
   end
 
-  test 'GET accept invitation renders turnstile head tags' do
+  # Accept invitation is an update action, not protected by default (create-only
+  # scope), so no Turnstile head tags are rendered on the accept page.
+  test 'GET accept invitation has no turnstile head tags by default' do
     raw = User.invite!(email: 'accept-controller@example.com', skip_invitation: true).raw_invitation_token
     get accept_user_invitation_url(invitation_token: raw)
 
     assert_response :success
-    assert_match(/cf-turnstile-site-key/, response.body)
-    assert_match(/devise_cloudflare_turnstile/, response.body)
+    refute_match(/cf-turnstile-site-key/, response.body)
   end
 
   private

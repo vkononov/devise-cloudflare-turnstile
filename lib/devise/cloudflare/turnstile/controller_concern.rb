@@ -4,13 +4,20 @@ module Devise
       module ControllerConcern
         extend ActiveSupport::Concern
 
+        # Maps a protected submit action to the GET action that renders its form,
+        # so the widget also shows on the page the user first lands on.
+        TURNSTILE_FORM_ACTIONS = { 'create' => 'new', 'update' => 'edit' }.freeze
+
         included do
           # class_attribute's `default:` keyword arrived in Rails 5.2, so set it
           # explicitly to keep Rails 5.0/5.1 compatibility.
           class_attribute :_turnstile_skip_rules, instance_accessor: false
           self._turnstile_skip_rules = []
 
-          before_action :verify_cloudflare_turnstile!, only: :create
+          # Use `if:` rather than `only:` so Devise controllers without the
+          # protected actions (e.g. OmniauthCallbacksController, which has no
+          # create action) do not trip Rails 7.1's raise_on_missing_callback_actions.
+          before_action :verify_cloudflare_turnstile!, if: :turnstile_verify_action?
           before_action :set_turnstile_page_marker, if: :turnstile_form_action?
         end
 
@@ -85,13 +92,28 @@ module Devise
           @_devise_turnstile_protected = true
         end
 
-        # Include create/update so failed submissions that re-render the form
-        # still emit the Turnstile meta tag and scripts. Without this, Turbo
-        # merges a head that omits them and the widget never comes back.
+        # The configured actions Turnstile verifies (defaults to create).
+        def turnstile_verify_action?
+          action_name.in?(turnstile_protected_actions)
+        end
+
+        # The widget renders on each protected submit action and on the GET
+        # action that shows its form. Emitting it on the submit action too keeps
+        # the meta tag/scripts present on a failed re-render, which Turbo needs
+        # so the widget comes back.
         def turnstile_form_action?
           return false if turnstile_skipped?
 
-          action_name.in?(%w[new edit create update])
+          action_name.in?(turnstile_display_actions)
+        end
+
+        def turnstile_display_actions
+          actions = turnstile_protected_actions
+          actions + actions.map { |action| TURNSTILE_FORM_ACTIONS[action] }.compact
+        end
+
+        def turnstile_protected_actions
+          ::Cloudflare::Turnstile::Rails.configuration.protected_actions
         end
 
         def turnstile_skipped?
