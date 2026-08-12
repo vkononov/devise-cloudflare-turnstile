@@ -24,6 +24,13 @@ class ControllerConcernRequestTest < ActionDispatch::IntegrationTest # rubocop:d
     assert_includes @response.body, 'marked:true'
   end
 
+  def test_controller_without_create_action_does_not_raise
+    get '/omniauth_like'
+
+    assert_response :success
+    assert_equal 'ok', @response.body
+  end
+
   def test_create_is_verified
     with_secret('') do
       assert_raises(Cloudflare::Turnstile::Rails::ConfigurationError) do
