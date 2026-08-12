@@ -10,9 +10,6 @@ module Devise
           class_attribute :_turnstile_skip_rules, instance_accessor: false
           self._turnstile_skip_rules = []
 
-          # Use `if:` rather than `only:` so Devise controllers that don't define
-          # a create action (e.g. OmniauthCallbacksController) don't trip Rails
-          # 7.1's raise_on_missing_callback_actions.
           before_action :verify_cloudflare_turnstile!, if: :turnstile_verify_action?
           before_action :set_turnstile_page_marker, if: :turnstile_form_action?
         end
