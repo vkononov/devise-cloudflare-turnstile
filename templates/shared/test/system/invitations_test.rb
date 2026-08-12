@@ -42,14 +42,15 @@ class InvitationsTest < ApplicationSystemTestCase
     end
   end
 
-  # Accept invitation uses update (not create), so Turnstile is not server-verified.
-  # Assert the widget is still injected on the accept form.
-  test 'accept invitation page renders turnstile widget' do
+  # Accept invitation is an update action; only create actions are protected,
+  # so no widget is injected on the accept form.
+  test 'accept invitation page has no turnstile widget' do
     raw = User.invite!(email: 'accept@example.com', skip_invitation: true).raw_invitation_token
     visit accept_user_invitation_url(invitation_token: raw)
-    wait_for_turnstile_inputs(1)
 
-    assert_turnstile_widget
+    assert_selector "input[type='password']", visible: :all, wait: 5
+    assert_no_selector 'div.cf-turnstile', visible: :all
+    assert_no_selector "meta[name='cf-turnstile-site-key']", visible: :all
   end
 
   private
