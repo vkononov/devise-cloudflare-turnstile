@@ -5,7 +5,7 @@
 [![Rails](https://img.shields.io/badge/Rails-5.0%20to%208.1-D30001?logo=rubyonrails&logoColor=white)](https://github.com/vkononov/devise-cloudflare-turnstile/blob/main/Appraisals)
 [![Test Matrix](https://img.shields.io/github/actions/workflow/status/vkononov/devise-cloudflare-turnstile/test.yml?branch=main&label=Test%20Matrix&logo=github)](https://github.com/vkononov/devise-cloudflare-turnstile/actions/workflows/test.yml)
 [![Lint](https://img.shields.io/github/actions/workflow/status/vkononov/devise-cloudflare-turnstile/lint.yml?branch=main&label=Lint&logo=github)](https://github.com/vkononov/devise-cloudflare-turnstile/actions/workflows/lint.yml)
-[![License](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
+[![License](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/license/MIT)
 
 Automatically protect all Devise authentication forms with Cloudflare Turnstile. Add two helper tags to your layout, set your API keys, and every Devise form is protected — no changes to your Devise views or controllers.
 
@@ -194,7 +194,7 @@ Cloudflare provides dummy sitekeys and secret keys for development and testing. 
 |----------|-------|----------|
 | Site Key | `1x00000000000000000000AA` | Always passes (visible) |
 | Secret Key | `1x0000000000000000000000000000000AA` | Always passes |
-| Site Key | `2x00000000000000000000AB` | Always blocks (visible) |
+| Site Key | `2x00000000000000000000AB` | Always fails (visible) |
 | Secret Key | `2x0000000000000000000000000000000AA` | Always fails |
 
 ## Development
@@ -227,7 +227,7 @@ Run RuboCop and ESLint together:
 bin/lint
 ```
 
-> **CI Note:** We run this via [.github/workflows/lint.yml](.github/workflows/lint.yml) on the latest Ruby only.
+> **CI Note:** We run `bin/lint --no-fix` via [.github/workflows/lint.yml](.github/workflows/lint.yml) on the latest Ruby only.
 
 ## Contributing
 
