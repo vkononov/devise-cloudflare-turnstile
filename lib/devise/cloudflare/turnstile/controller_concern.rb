@@ -92,13 +92,14 @@ module Devise
           action_name == 'create'
         end
 
-        # Include create/update so failed submissions that re-render the form
-        # still emit the Turnstile meta tag and scripts. Without this, Turbo
-        # merges a head that omits them and the widget never comes back.
+        # The widget shows on the create forms (`new`) and on `create` itself, so
+        # a failed submission that re-renders still emits the meta tag and scripts
+        # that Turbo needs. Edit/update pages are excluded because only `create`
+        # is verified.
         def turnstile_form_action?
           return false if turnstile_skipped?
 
-          action_name.in?(%w[new edit create update])
+          action_name.in?(%w[new create])
         end
 
         def turnstile_skipped?

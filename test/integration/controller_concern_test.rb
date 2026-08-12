@@ -17,11 +17,12 @@ class ControllerConcernRequestTest < ActionDispatch::IntegrationTest # rubocop:d
     assert_includes @response.body, 'devise_cloudflare_turnstile'
   end
 
-  def test_edit_marks_the_page
+  def test_edit_does_not_mark_the_page
     get '/concern/edit'
 
     assert_response :success
-    assert_includes @response.body, 'marked:true'
+    refute_includes @response.body, 'marked:true'
+    refute_includes @response.body, 'cf-turnstile-site-key'
   end
 
   def test_controller_without_create_action_does_not_raise
