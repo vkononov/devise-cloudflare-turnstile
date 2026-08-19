@@ -85,7 +85,7 @@ That's it — all Devise forms are now protected.
 ### How It Works
 
 * **Controller** — a `before_action` on every Devise controller verifies the Turnstile response on `create` and re-renders the form with an error if it fails.
-* **View** — on Devise form pages, the two layout helpers emit the site key and load the injector JavaScript, which adds a `cf-turnstile` widget before each submit button. Rails `button_to` action buttons (e.g. OAuth sign-in or log out) are skipped.
+* **View** — on Devise form pages, the two layout helpers emit the site key and load the injector JavaScript, which adds a `cf-turnstile` widget before each submit button. Only forms with a field a person fills in are considered, so action-only POST forms such as OAuth sign-in and log-out buttons are skipped.
 
 The widget appears only on the `create` forms (and their `new` pages) — sign in, sign up, password-reset request, and resend confirmation/unlock. Authenticated and edit pages such as account settings, password-reset completion, and accepting an invitation are left untouched.
 
@@ -182,7 +182,8 @@ end
 | Edit / authenticated pages (account settings, password-reset completion, accept invitation) | Not protected — the widget only appears on the `create` forms |
 | Custom controller with `skip_turnstile` (or config `skip`) | That controller/action opts out of both widget and verification |
 | No custom views | Devise's default views render; the widget still injects |
-| Custom view without a widget | The widget is injected before the submit button; Rails `button_to` action buttons are skipped |
+| Custom view without a widget | The widget is injected before the submit button if the form has a fillable field: a text, email, password, `textarea` or `select` field counts, a hidden input, checkbox, radio or file input does not |
+| Action-only POST form (OAuth sign-in, log out, delete) | No fillable field, so no widget |
 | Custom view with `cloudflare_turnstile_tag` | Your widget is used as-is; nothing is auto-injected |
 | Invisible vs visible widget | Determined by the site key's widget type in the Cloudflare dashboard |
 

@@ -8,7 +8,7 @@ class InjectorBehaviorsTest < ApplicationSystemTestCase
     end
   end
 
-  test 'injector renders widgets on two forms but skips button_to action buttons' do
+  test 'injector adds widgets to forms with fields but skips action-only buttons' do
     skip "Not supported in Github actions for Ruby v#{RUBY_VERSION}" if RUBY_VERSION < '2.7.0' && ENV['CI']
 
     visit dual_forms_url
@@ -16,6 +16,10 @@ class InjectorBehaviorsTest < ApplicationSystemTestCase
 
     assert_selector 'form#form-one div.cf-turnstile', count: 1, visible: :all
     assert_selector 'form#form-two div.cf-turnstile', count: 1, visible: :all
+
+    assert_selector 'form#form-oauth', count: 1, visible: :all
+    assert_no_selector 'form#form-oauth div.cf-turnstile', visible: :all
+
     assert_selector 'form.button_to', count: 1, visible: :all
     assert_no_selector 'form.button_to div.cf-turnstile', visible: :all
   end
@@ -76,7 +80,8 @@ class InjectorBehaviorsTest < ApplicationSystemTestCase
             var form = document.createElement('form');
             form.method = 'post';
             form.id = 'stream-injected-form';
-            form.innerHTML = '<input type="submit" value="Stream submit">';
+            form.innerHTML = '<input type="text" name="email">' +
+              '<input type="submit" value="Stream submit">';
             document.body.appendChild(form);
           }
         };
