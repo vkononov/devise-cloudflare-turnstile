@@ -1,6 +1,7 @@
 <h1>Widget custom</h1>
 
 <%= form_tag('/', method: :post, id: 'form-plain') do %>
+  <%= text_field_tag :email %>
   <%= submit_tag 'Submit plain' %>
 <% end %>
 
