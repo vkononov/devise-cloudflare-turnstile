@@ -84,7 +84,7 @@ That's it — all Devise forms are now protected.
 
 ### How It Works
 
-* **Controller** — a `before_action` on every Devise controller verifies the Turnstile response on `create` and re-renders the form with an error if it fails.
+* **Controller** — a `before_action` on every Devise controller verifies the Turnstile response on `create` and re-renders the form if it fails, reporting the failure as `flash.now[:alert]` only and never on the resource. Your layout must render `alert` for the message to be seen.
 * **View** — on Devise form pages, the two layout helpers emit the site key and load the injector JavaScript, which adds a `cf-turnstile` widget before each submit button. Only forms with a field a person fills in are considered, so action-only POST forms such as OAuth sign-in and log-out buttons are skipped.
 
 The widget appears only on the `create` forms (and their `new` pages) — sign in, sign up, password-reset request, and resend confirmation/unlock. Authenticated and edit pages such as account settings, password-reset completion, and accepting an invitation are left untouched.
