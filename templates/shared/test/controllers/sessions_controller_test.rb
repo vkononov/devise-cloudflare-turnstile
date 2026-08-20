@@ -47,4 +47,47 @@ class SessionsControllerTest < ActionDispatch::IntegrationTest
     assert_match(/cf-turnstile-site-key/, response.body)
     assert_match(/We could not verify that you/, response.body)
   end
+
+  test 'POST sign in with failing turnstile does not sign the user in' do
+    Cloudflare::Turnstile::Rails.configuration.secret_key = '2x0000000000000000000000000000000AA'
+    Cloudflare::Turnstile::Rails.configuration.auto_populate_response_in_test_env = true
+
+    post user_session_url, params: {
+      user: { email: @user.email, password: 'Password1!' }
+    }
+
+    assert_response :unprocessable_entity
+    assert_no_match(/id="current-user"/, response.body)
+
+    get root_url
+
+    assert_response :success
+    assert_no_match(/id="current-user"/, response.body)
+  end
+
+  test 'POST sign in with failing turnstile sets no remember cookie' do
+    Cloudflare::Turnstile::Rails.configuration.secret_key = '2x0000000000000000000000000000000AA'
+    Cloudflare::Turnstile::Rails.configuration.auto_populate_response_in_test_env = true
+
+    post user_session_url, params: {
+      user: { email: @user.email, password: 'Password1!', remember_me: '1' }
+    }
+
+    assert_response :unprocessable_entity
+    assert_nil cookies['remember_user_token'].presence
+  end
+
+  test 'POST sign in with passing turnstile still authenticates from params' do
+    Cloudflare::Turnstile::Rails.configuration.auto_populate_response_in_test_env = true
+
+    post user_session_url, params: {
+      user: { email: @user.email, password: 'Password1!' }
+    }
+
+    assert_redirected_to root_url
+    follow_redirect!
+
+    assert_match(/id="current-user"/, response.body)
+    assert_match(/#{Regexp.escape(@user.email)}/, response.body)
+  end
 end
