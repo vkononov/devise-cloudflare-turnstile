@@ -36,6 +36,7 @@ module Devise
           self.resource ||= resource_class.new
           return if valid_turnstile?(model: resource, **turnstile_verify_options)
 
+          revoke_params_authentication!
           restore_turnstile_submitted_values
 
           # Sessions (and some other Devise views) do not render resource errors.
@@ -45,6 +46,14 @@ module Devise
           set_minimum_password_length if respond_to?(:set_minimum_password_length, true)
           set_turnstile_page_marker
           render turnstile_failure_action, status: :unprocessable_entity
+        end
+
+        # Devise's sessions#create marks the request eligible for authentication
+        # straight from the posted credentials. That flag outlives our halt, so
+        # any current_user call during the failure render would sign the visitor
+        # in. Devise publishes no constant for the key.
+        def revoke_params_authentication!
+          request.env.delete('devise.allow_params_authentication')
         end
 
         # Re-populate the resource with the values the user just submitted (minus
