@@ -86,6 +86,19 @@ class ControllerConcernRequestTest < ActionDispatch::IntegrationTest # rubocop:d
     end
   end
 
+  def test_failed_turnstile_does_not_repeat_the_alert_on_the_next_page
+    stub_verification(success: false) do
+      post '/concern'
+
+      assert_match(/alert:We could not verify that you/, @response.body)
+    end
+
+    get '/concern/new'
+
+    assert_response :success
+    assert_includes @response.body, 'alert:|'
+  end
+
   def test_failed_turnstile_preserves_submitted_values_except_password_family
     submitted = {
       email: 'keep@example.com', name: 'Ada',
