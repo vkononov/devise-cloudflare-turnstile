@@ -34,18 +34,24 @@ module Devise
           return if turnstile_skipped?
 
           self.resource ||= resource_class.new
-          return if valid_turnstile?(model: resource, **turnstile_verify_options)
+          return if turnstile_verified?
 
           revoke_params_authentication!
           restore_turnstile_submitted_values
 
-          # Sessions (and some other Devise views) do not render resource errors.
-          # Always surface the failure via flash so the user sees feedback.
           flash.now[:alert] = ::Cloudflare::Turnstile::Rails::ErrorMessage.default
           clean_up_passwords(resource) if respond_to?(:clean_up_passwords, true)
           set_minimum_password_length if respond_to?(:set_minimum_password_length, true)
           set_turnstile_page_marker
           render turnstile_failure_action, status: :unprocessable_entity
+        end
+
+        # No model is passed, so the failure stays out of resource.errors.
+        # valid_turnstile? is avoided: it sets a flash that outlives this render.
+        def turnstile_verified?
+          result = verify_turnstile(**turnstile_verify_options)
+
+          result.is_a?(::Cloudflare::Turnstile::Rails::VerificationResponse) && result.success?
         end
 
         # Devise's sessions#create marks the request eligible for authentication
