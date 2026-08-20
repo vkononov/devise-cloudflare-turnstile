@@ -43,6 +43,15 @@
     }
   }
 
+  // Hidden inputs, checkboxes, radios and file inputs don't count as fillable.
+  function hasFillableField(form) {
+    var selector = 'input[type="text"], input[type="email"], input[type="password"], ' +
+      'input[type="search"], input[type="tel"], input[type="url"], ' +
+      'input[type="number"], input:not([type]), textarea, select';
+
+    return form.querySelector(selector) !== null;
+  }
+
   function renderWidget(widget) {
     if (widget.dataset.initialized || widget.childElementCount > 0) {
       return;
@@ -74,18 +83,17 @@
       return;
     }
 
-    /*
-     * Skip Rails button_to forms (rendered with class "button_to"), such as
-     * OAuth sign-in, log out, or delete buttons. They are action buttons, not
-     * user-input forms, so they should never get a Turnstile widget.
-     */
-    forms = document.querySelectorAll('form[method="post"]:not(.button_to), form[method="POST"]:not(.button_to)');
+    forms = document.querySelectorAll('form[method="post"], form[method="POST"]');
 
     for (i = 0; i < forms.length; i++) {
       form = forms[i];
       widget = form.querySelector('.' + WIDGET_CLASS);
 
       if (!widget) {
+        if (!hasFillableField(form)) {
+          continue;
+        }
+
         submit = form.querySelector('input[type="submit"], button[type="submit"], button:not([type])');
 
         if (!submit) {

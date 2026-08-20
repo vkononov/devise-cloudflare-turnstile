@@ -1,11 +1,17 @@
 <h1>Dual forms</h1>
 
 <%= form_tag('/', method: :post, id: 'form-one') do %>
+  <%= text_field_tag :email %>
   <%= submit_tag 'Submit one' %>
 <% end %>
 
 <%= form_tag('/', method: :post, id: 'form-two') do %>
+  <%= text_field_tag :email %>
   <%= submit_tag 'Submit two' %>
+<% end %>
+
+<%= form_tag('/', method: :post, id: 'form-oauth') do %>
+  <%= submit_tag 'Sign in with OAuth' %>
 <% end %>
 
 <%= button_to 'Action button', '/' %>
