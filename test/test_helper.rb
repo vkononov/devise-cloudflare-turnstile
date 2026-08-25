@@ -263,6 +263,52 @@ class VerifyOptionsController < ActionController::Base
   end
 end
 
+# Mirrors the callback order of a real Devise create action inside a host app.
+# The host's ApplicationController registers its callbacks first, the concern is
+# then included into DeviseController, and Devise::SessionsController prepends
+# allow_params_authentication! ahead of everything it inherits.
+class HostCallbackController < ActionController::Base
+  # Stands in for a host before_action that touches current_user, such as
+  # `Current.user = current_user` or PaperTrail's whodunnit. Devise's
+  # current_user runs Warden's strategies, which authenticate straight from the
+  # posted credentials while allow_params_authentication! is in effect.
+  before_action :simulate_current_user
+
+  include Devise::Cloudflare::Turnstile::ControllerConcern
+
+  prepend_before_action :allow_params_authentication!
+
+  append_view_path File.expand_path('fixtures/views', __dir__)
+
+  class << self
+    attr_accessor :authenticated
+  end
+
+  attr_accessor :resource
+
+  def resource_class
+    DummyResource
+  end
+
+  def resource_name
+    :dummy_resource
+  end
+
+  def create
+    render inline: 'ok'
+  end
+
+  private
+
+  def allow_params_authentication!
+    request.env['devise.allow_params_authentication'] = true
+  end
+
+  def simulate_current_user
+    self.class.authenticated = request.env['devise.allow_params_authentication'].present?
+  end
+end
+
 # Mirrors Devise::OmniauthCallbacksController, which has no create action.
 class OmniauthLikeController < ActionController::Base
   include Devise::Cloudflare::Turnstile::ControllerConcern
@@ -292,6 +338,7 @@ Rails.application.routes.draw do
   get '/skip_except/new', to: 'skip_except_create#new'
   post '/skip_except', to: 'skip_except_create#create'
   post '/verify_options', to: 'verify_options#create'
+  post '/host_callback', to: 'host_callback#create'
   get '/omniauth_like', to: 'omniauth_like#callback'
 end
 

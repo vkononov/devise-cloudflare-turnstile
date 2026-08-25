@@ -5,6 +5,7 @@ class ControllerConcernRequestTest < ActionDispatch::IntegrationTest # rubocop:d
 
   def setup
     DummyResource.clean_up_calls = 0
+    HostCallbackController.authenticated = nil
   end
 
   def test_new_marks_the_page_and_emits_turnstile_head_tags
@@ -206,6 +207,31 @@ class ControllerConcernRequestTest < ActionDispatch::IntegrationTest # rubocop:d
       assert_raises(Cloudflare::Turnstile::Rails::ConfigurationError) do
         post '/skip_except'
       end
+    end
+  end
+
+  # A failed check must revoke params authentication before anything else in the
+  # request can act on the posted credentials, otherwise a host callback that
+  # touches current_user signs the visitor in and the failure page is served
+  # over a live session.
+  def test_failed_turnstile_revokes_params_authentication_before_host_callbacks
+    stub_verification(success: false) do
+      post '/host_callback'
+
+      assert_response :unprocessable_entity
+      assert_match(/alert:We could not verify that you/, @response.body)
+      refute HostCallbackController.authenticated,
+             'a host before_action could still authenticate from the posted credentials'
+    end
+  end
+
+  def test_successful_turnstile_leaves_params_authentication_in_place
+    stub_verification(success: true) do
+      post '/host_callback'
+
+      assert_response :success
+      assert_equal 'ok', @response.body
+      assert HostCallbackController.authenticated
     end
   end
 
