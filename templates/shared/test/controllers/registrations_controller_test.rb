@@ -49,6 +49,7 @@ class RegistrationsControllerTest < ActionDispatch::IntegrationTest
     assert_response :unprocessable_entity
     assert_match(/cf-turnstile-site-key/, response.body)
     assert_match(/We could not verify that you/, response.body)
+    assert_no_match(/id="current-user"/, response.body)
   end
 
   test 'POST sign up with failing turnstile reports the failure exactly once' do
