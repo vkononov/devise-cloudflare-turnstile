@@ -60,6 +60,7 @@ end
 
 # 3) copy shared app files
 %w[
+  app/controllers/application_controller.rb
   app/controllers/pages_controller.rb
   app/models/user.rb
   app/views/layouts/application.html.erb

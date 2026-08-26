@@ -10,6 +10,7 @@ module Devise
           class_attribute :_turnstile_skip_rules, instance_accessor: false
           self._turnstile_skip_rules = []
 
+          prepend_before_action :prevalidate_cloudflare_turnstile!, if: :turnstile_verify_action?
           before_action :verify_cloudflare_turnstile!, if: :turnstile_verify_action?
           before_action :set_turnstile_page_marker, if: :turnstile_form_action?
         end
@@ -30,13 +31,20 @@ module Devise
 
         private
 
+        # Runs ahead of the application's own filters, since any filter that
+        # reads the signed-in user lets Warden authenticate from the posted
+        # credentials. verify_cloudflare_turnstile! still renders the failure.
+        def prevalidate_cloudflare_turnstile!
+          return unless turnstile_devise_resource?
+          return if turnstile_skipped?
+          return if turnstile_verified?
+
+          revoke_params_authentication!
+        end
+
         def verify_cloudflare_turnstile!
           return if turnstile_skipped?
-
-          self.resource ||= resource_class.new
-          # No model is passed, so the failure stays out of resource.errors and is
-          # reported through the flash, scoped to the render below.
-          return if valid_turnstile?(flash: :now, **turnstile_verify_options)
+          return if turnstile_verified?
 
           revoke_params_authentication!
           restore_turnstile_submitted_values
@@ -46,10 +54,25 @@ module Devise
           render turnstile_failure_action, status: :unprocessable_entity
         end
 
+        # Memoised because Cloudflare tokens are single use, so the early check
+        # and a direct verify_cloudflare_turnstile! call verify only once.
+        def turnstile_verified?
+          return @_turnstile_verified unless @_turnstile_verified.nil?
+
+          self.resource ||= resource_class.new
+          # No model is passed, so the failure stays out of resource.errors and is
+          # reported through the flash, scoped to the render that follows.
+          @_turnstile_verified = valid_turnstile?(flash: :now, **turnstile_verify_options)
+        end
+
+        # Devise asserts the mapping in its own prepended callback, which runs
+        # after ours. Standing down without one keeps its clearer error.
+        def turnstile_devise_resource?
+          !respond_to?(:devise_mapping, true) || !devise_mapping.nil?
+        end
+
         # Devise's sessions#create marks the request eligible for authentication
-        # straight from the posted credentials. That flag outlives our halt, so
-        # any current_user call during the failure render would sign the visitor
-        # in. Devise publishes no constant for the key.
+        # from the posted credentials, and publishes no constant for the key.
         def revoke_params_authentication!
           request.env.delete('devise.allow_params_authentication')
         end
