@@ -48,8 +48,7 @@ class InvitationsControllerTest < ActionDispatch::IntegrationTest
     assert_response :unprocessable_entity
     assert_match(/cf-turnstile-site-key/, response.body)
     assert_match(/We could not verify that you/, response.body)
-    # The inviter is signed in here, so the check is that the failure left their
-    # session alone rather than that no one is signed in.
+    # The inviter is signed in here, so check their session was not swapped.
     assert_match(%r{id="current-user">#{Regexp.escape(@inviter.email)}</p>}, response.body)
   end
 

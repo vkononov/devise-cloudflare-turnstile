@@ -31,12 +31,9 @@ module Devise
 
         private
 
-        # Settles the check ahead of the host application's own before_actions.
-        # One of those touching current_user (Current.user assignment,
-        # PaperTrail's whodunnit) is enough for Warden to authenticate from the
-        # posted credentials, so a failure has to revoke that permission first.
-        # verify_cloudflare_turnstile! renders the response rather than this
-        # callback, leaving the host's callbacks to prepare the request.
+        # Runs ahead of the application's own filters, since any filter that
+        # reads the signed-in user lets Warden authenticate from the posted
+        # credentials. verify_cloudflare_turnstile! still renders the failure.
         def prevalidate_cloudflare_turnstile!
           return unless turnstile_devise_resource?
           return if turnstile_skipped?
@@ -57,9 +54,8 @@ module Devise
           render turnstile_failure_action, status: :unprocessable_entity
         end
 
-        # Memoised because Cloudflare tokens are single use: the prepended
-        # callback resolves the outcome early, and calling
-        # verify_cloudflare_turnstile! directly still verifies exactly once.
+        # Memoised because Cloudflare tokens are single use, so the early check
+        # and a direct verify_cloudflare_turnstile! call verify only once.
         def turnstile_verified?
           return @_turnstile_verified unless @_turnstile_verified.nil?
 
@@ -76,8 +72,7 @@ module Devise
         end
 
         # Devise's sessions#create marks the request eligible for authentication
-        # straight from the posted credentials, and that flag outlives our halt.
-        # Devise publishes no constant for the key.
+        # from the posted credentials, and publishes no constant for the key.
         def revoke_params_authentication!
           request.env.delete('devise.allow_params_authentication')
         end
