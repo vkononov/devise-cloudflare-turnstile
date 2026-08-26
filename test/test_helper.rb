@@ -263,15 +263,12 @@ class VerifyOptionsController < ActionController::Base
   end
 end
 
-# Mirrors the callback order of a real Devise create action inside a host app.
-# The host's ApplicationController registers its callbacks first, the concern is
-# then included into DeviseController, and Devise::SessionsController prepends
-# allow_params_authentication! ahead of everything it inherits.
+# Mirrors the callback order of a real Devise create action: the application
+# registers its filters first, the concern is included into DeviseController,
+# and SessionsController prepends allow_params_authentication! ahead of both.
 class HostCallbackController < ActionController::Base
-  # Stands in for a host before_action that touches current_user, such as
-  # `Current.user = current_user` or PaperTrail's whodunnit. Devise's
-  # current_user runs Warden's strategies, which authenticate straight from the
-  # posted credentials while allow_params_authentication! is in effect.
+  # Stands in for an application filter that reads the signed-in user, which in
+  # Devise runs Warden and authenticates from the posted credentials.
   before_action :simulate_current_user
 
   include Devise::Cloudflare::Turnstile::ControllerConcern

@@ -1,10 +1,8 @@
 class ApplicationController < ActionController::Base
   protect_from_forgery with: :exception
 
-  # Host applications routinely resolve the signed-in user in a callback, such as
-  # assigning Current.user or PaperTrail's whodunnit. Devise permits
-  # authentication straight from the posted credentials on create, so this makes
-  # Warden sign the visitor in unless Turnstile has been settled first.
+  # Reading the signed-in user in a filter is enough for Warden to authenticate
+  # from the posted credentials, which is what the sessions tests rely on.
   before_action :track_signed_in_user
 
   private

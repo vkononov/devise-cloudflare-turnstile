@@ -210,10 +210,6 @@ class ControllerConcernRequestTest < ActionDispatch::IntegrationTest # rubocop:d
     end
   end
 
-  # A failed check must revoke params authentication before anything else in the
-  # request can act on the posted credentials, otherwise a host callback that
-  # touches current_user signs the visitor in and the failure page is served
-  # over a live session.
   def test_failed_turnstile_revokes_params_authentication_before_host_callbacks
     stub_verification(success: false) do
       post '/host_callback'
