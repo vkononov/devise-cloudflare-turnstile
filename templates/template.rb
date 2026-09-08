@@ -10,6 +10,7 @@ invitable_version = ENV.fetch('DEVISE_INVITABLE_VERSION')
 append_to_file 'Gemfile', <<~RUBY
 
   gem 'appraisal', require: false
+  gem 'json', '< 3'
   gem 'minitest-retry', require: false
   gem 'rails-controller-testing'
 
