@@ -23,6 +23,7 @@ group :development do
 end
 
 group :test do
+  gem 'json', '< 3'
   gem 'minitest'
 
   gem 'minitest-mock' if RUBY_VERSION >= '3.1.0'
