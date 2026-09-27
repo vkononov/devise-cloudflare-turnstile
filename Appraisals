@@ -31,7 +31,10 @@ end
 
 appraise 'rails-6.0' do
   gem 'rails', '~> 6.0.0'
-  gem 'devise_invitable', '~> 2.0'
+  # 2.0.13 registers its mailer include from to_prepare inside
+  # on_load(:action_mailer). On Rails 6 that hook has already run, so
+  # Devise::Mailer is never loaded.
+  gem 'devise_invitable', '~> 2.0', '< 2.0.13'
   if RUBY_VERSION >= '3.4.0'
     gem 'drb'
     gem 'mutex_m'
@@ -41,7 +44,7 @@ end
 
 appraise 'rails-6.1' do
   gem 'rails', '~> 6.1.0'
-  gem 'devise_invitable', '~> 2.0'
+  gem 'devise_invitable', '~> 2.0', '< 2.0.13'
   if RUBY_VERSION >= '3.4.0'
     gem 'drb'
     gem 'mutex_m'
@@ -167,7 +170,7 @@ end
 appraise 'devise-4.7' do
   gem 'rails', '~> 6.1.0'
   gem 'devise', '~> 4.7.0'
-  gem 'devise_invitable', '~> 2.0'
+  gem 'devise_invitable', '~> 2.0', '< 2.0.13'
   if RUBY_VERSION >= '3.4.0'
     gem 'drb'
     gem 'mutex_m'
@@ -178,7 +181,7 @@ end
 appraise 'devise-4.8' do
   gem 'rails', '~> 6.1.0'
   gem 'devise', '~> 4.8.0'
-  gem 'devise_invitable', '~> 2.0'
+  gem 'devise_invitable', '~> 2.0', '< 2.0.13'
   if RUBY_VERSION >= '3.4.0'
     gem 'drb'
     gem 'mutex_m'
