@@ -6,9 +6,9 @@ Gem::Specification.new do |spec|
   spec.authors = ['Vadim Kononov']
   spec.email = ['vadim@konoson.com']
 
-  spec.summary = 'Cloudflare Turnstile integration for Devise'
-  spec.description = 'Automatically protect Devise authentication forms with Cloudflare Turnstile, ' \
-                     'without changing your Devise views or controllers.'
+  spec.summary = 'Cloudflare Turnstile CAPTCHA for Devise with zero view or controller changes'
+  spec.description = 'Drop-in Cloudflare Turnstile CAPTCHA, a reCAPTCHA alternative, for Devise and Devise extensions. ' \
+                     'Auto-injected widget with Turbo, Turbolinks, CSP nonce and i18n support.'
   spec.homepage = 'https://github.com/vkononov/devise-cloudflare-turnstile'
   spec.license = 'MIT'
   spec.required_ruby_version = '>= 2.6.0'
