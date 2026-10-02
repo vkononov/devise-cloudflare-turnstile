@@ -210,6 +210,38 @@ class ControllerConcernRequestTest < ActionDispatch::IntegrationTest # rubocop:d
     end
   end
 
+  def test_macro_skip_rules_combine_across_calls
+    with_secret('') do
+      get '/skip_combined/new'
+
+      assert_response :success
+      refute_includes @response.body, 'cf-turnstile-site-key'
+
+      post '/skip_combined'
+
+      assert_response :success
+
+      assert_raises(Cloudflare::Turnstile::Rails::ConfigurationError) do
+        patch '/skip_combined'
+      end
+    end
+  end
+
+  def test_config_skip_and_macro_skip_both_apply
+    with_devise_skip(skip_only_create: :new) do
+      with_secret('') do
+        get '/skip_only/new'
+
+        assert_response :success
+        refute_includes @response.body, 'cf-turnstile-site-key'
+
+        post '/skip_only'
+
+        assert_response :success
+      end
+    end
+  end
+
   def test_failed_turnstile_revokes_params_authentication_before_host_callbacks
     stub_verification(success: false) do
       post '/host_callback'
