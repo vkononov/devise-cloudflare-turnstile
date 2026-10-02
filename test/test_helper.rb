@@ -243,6 +243,36 @@ class SkipExceptCreateController < ActionController::Base
   end
 end
 
+# Two macro calls: each rule is honoured, so both new and create are skipped
+# while edit stays protected.
+class SkipCombinedController < ActionController::Base
+  include Devise::Cloudflare::Turnstile::ControllerConcern
+
+  skip_turnstile only: :new
+  skip_turnstile only: :create
+
+  attr_accessor :resource
+
+  def resource_class
+    DummyResource
+  end
+
+  def new
+    render inline: ViewHelperTestController::TEMPLATE
+  end
+
+  def create
+    render inline: ViewHelperTestController::TEMPLATE
+  end
+
+  def update
+    verify_cloudflare_turnstile!
+    return if performed?
+
+    render inline: 'ok'
+  end
+end
+
 class VerifyOptionsController < ActionController::Base
   include Devise::Cloudflare::Turnstile::ControllerConcern
 
@@ -334,6 +364,9 @@ Rails.application.routes.draw do
   post '/skip_only', to: 'skip_only_create#create'
   get '/skip_except/new', to: 'skip_except_create#new'
   post '/skip_except', to: 'skip_except_create#create'
+  get '/skip_combined/new', to: 'skip_combined#new'
+  post '/skip_combined', to: 'skip_combined#create'
+  patch '/skip_combined', to: 'skip_combined#update'
   post '/verify_options', to: 'verify_options#create'
   post '/host_callback', to: 'host_callback#create'
   get '/omniauth_like', to: 'omniauth_like#callback'
