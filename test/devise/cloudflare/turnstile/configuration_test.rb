@@ -32,6 +32,38 @@ class ConfigurationTest < Minitest::Test
     refute @config.skipped?('unlocks', 'edit')
   end
 
+  def test_repeated_skips_for_a_controller_accumulate
+    @config.skip passwords: :create
+    @config.skip passwords: :new
+
+    assert @config.skipped?('passwords', 'create')
+    assert @config.skipped?('passwords', 'new')
+    refute @config.skipped?('passwords', 'edit')
+  end
+
+  def test_skipping_the_whole_controller_is_not_narrowed_by_a_later_action_skip
+    @config.skip :passwords
+    @config.skip passwords: :create
+
+    assert @config.skipped?('passwords', 'new')
+    assert @config.skipped?('passwords', 'edit')
+  end
+
+  def test_skipping_the_whole_controller_widens_an_earlier_action_skip
+    @config.skip passwords: :create
+    @config.skip :passwords
+
+    assert @config.skipped?('passwords', 'new')
+  end
+
+  def test_string_and_symbol_names_are_equivalent
+    @config.skip 'sessions' => 'create'
+    @config.skip({ 'passwords' => 'new' })
+
+    assert @config.skipped?(:sessions, :create)
+    assert @config.skipped?(:passwords, :new)
+  end
+
   def test_configure_yields_shared_configuration
     Cloudflare::Turnstile::Rails.configure { |config| config.skip :registrations }
 
