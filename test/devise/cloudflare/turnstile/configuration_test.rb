@@ -58,8 +58,10 @@ class ConfigurationTest < Minitest::Test
 
   def test_string_and_symbol_names_are_equivalent
     @config.skip 'sessions' => 'create'
+    @config.skip({ 'passwords' => 'new' })
 
     assert @config.skipped?(:sessions, :create)
+    assert @config.skipped?(:passwords, :new)
   end
 
   def test_configure_yields_shared_configuration

@@ -18,7 +18,7 @@ module Cloudflare
         #   config.skip passwords: :create        # a single action
         #   config.skip unlocks: [:new, :create]  # a set of actions
         def skip(*controllers, **controller_actions)
-          controllers.each { |controller| skips[controller.to_s] = :all }
+          controllers.each { |controller| skip_named(controller) }
           controller_actions.each { |controller, actions| skip_actions(controller.to_s, actions) }
         end
 
@@ -31,6 +31,13 @@ module Cloudflare
         end
 
         private
+
+        # Ruby 2.6 passes a string-key hash as a positional argument, not as keywords.
+        def skip_named(controller)
+          return skips[controller.to_s] = :all unless controller.is_a?(Hash)
+
+          controller.each { |name, actions| skip_actions(name.to_s, actions) }
+        end
 
         def skip_actions(controller, actions)
           return if skips[controller] == :all
