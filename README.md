@@ -13,6 +13,9 @@ Built on [cloudflare-turnstile-rails](https://github.com/vkononov/cloudflare-tur
 
 Supports **Rails 5.0 → latest** and **Ruby 2.6 → latest**, with the full Rails/Ruby matrix tested daily in CI.
 
+> [!TIP]
+> **Protecting non-Devise forms too?** This gem covers Devise forms only. For contact, checkout, or any other form, use [cloudflare-turnstile-rails](https://github.com/vkononov/cloudflare-turnstile-rails) directly. It is installed as a dependency of this gem and shares the same configuration, so both can protect Devise and non-Devise forms in the same app.
+
 [!["Buy Me A Coffee"](https://www.buymeacoffee.com/assets/img/custom_images/yellow_img.png)](https://www.buymeacoffee.com/vkononov)
 
 ## Features
