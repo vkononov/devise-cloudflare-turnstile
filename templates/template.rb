@@ -48,15 +48,15 @@ RUBY
 
 # Pin sqlite3 by replacing the generator line — appending a second
 # `gem 'sqlite3'` declaration makes Bundler reject the Gemfile.
-# Rails 5.0 activates sqlite3 ~> 1.3.6; a 1.4.x install then fails at boot.
+# Rails 5.0 activates sqlite3 ~> 1.3.6; a 1.4+ install then fails at boot.
 # Rails 6/7 default Gemfiles can resolve to 1.7+/2.x packaged builds that fail
-# under older Rubies; 1.4.x uses system libsqlite3 instead.
+# under older Rubies. 1.4.x uses system libsqlite3, which no longer compiles
+# on Ubuntu GCC 14+ (`-Wincompatible-pointer-types` is an error). 1.5.x
+# vendors libsqlite via mini_portile and still supports Ruby 2.6.
 if Rails::VERSION::STRING.start_with?('5.0')
   gsub_file 'Gemfile', /^\s*gem ['"]sqlite3['"].*$/, "gem 'sqlite3', '~> 1.3.6'"
-elsif Rails::VERSION::STRING.start_with?('5.')
-  gsub_file 'Gemfile', /^\s*gem ['"]sqlite3['"].*$/, "gem 'sqlite3', '~> 1.3', '< 1.5'"
 elsif Rails::VERSION::MAJOR < 8
-  gsub_file 'Gemfile', /^\s*gem ['"]sqlite3['"].*$/, "gem 'sqlite3', '~> 1.4.0'"
+  gsub_file 'Gemfile', /^\s*gem ['"]sqlite3['"].*$/, "gem 'sqlite3', '~> 1.5.0'"
 end
 
 # 3) copy shared app files
