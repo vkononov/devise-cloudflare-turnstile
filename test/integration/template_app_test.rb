@@ -53,6 +53,9 @@ module TemplateAppTest
       ENV['RUBYOPT'] = rubyopt
       ENV['DEVISE_VERSION'] = devise_version
       ENV['DEVISE_INVITABLE_VERSION'] = invitable_version
+      # GCC 14 treats sqlite3 1.3/1.4 pointer mismatches as errors.
+      ENV['BUNDLE_BUILD__SQLITE3'] =
+        '--with-cflags=-Wno-error=incompatible-pointer-types -Wno-error=int-conversion'
 
       Dir.chdir(@tmpdir) do
         assert system('bundle', 'install', '--quiet'),
