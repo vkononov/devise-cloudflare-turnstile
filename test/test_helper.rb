@@ -115,6 +115,14 @@ class DummyResource
 
   attr_accessor :email, :name, :password, :password_confirmation, :current_password
 
+  def self.authentication_keys
+    [:email]
+  end
+
+  def admin=(_value)
+    raise 'Unpermitted setter was invoked'
+  end
+
   class << self
     attr_accessor :clean_up_calls
   end
@@ -146,6 +154,12 @@ class ConcernTestController < ActionController::Base
 
   def resource_class
     DummyResource
+  end
+
+  def devise_parameter_sanitizer
+    sanitizer = Devise::ParameterSanitizer.new(resource_class, resource_name, params)
+    sanitizer.permit(:sign_in, keys: [:name])
+    sanitizer
   end
 
   def resource_name

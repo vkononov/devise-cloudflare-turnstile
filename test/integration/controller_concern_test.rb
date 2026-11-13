@@ -116,7 +116,7 @@ class ControllerConcernRequestTest < ActionDispatch::IntegrationTest # rubocop:d
   end
 
   def test_failed_turnstile_ignores_non_scalar_and_unknown_fields
-    submitted = { email: 'ok@example.com', name: { nested: 'x' }, roles: %w[a b], nickname: 'no-setter' }
+    submitted = { email: 'ok@example.com', name: { nested: 'x' }, roles: %w[a b], nickname: 'no-setter', admin: '1' }
 
     stub_verification(success: false) do
       post '/concern', params: { dummy_resource: submitted }
@@ -124,6 +124,26 @@ class ControllerConcernRequestTest < ActionDispatch::IntegrationTest # rubocop:d
       assert_response :unprocessable_entity
       assert_includes @response.body, 'email:ok@example.com'
       assert_includes @response.body, 'name:|'
+    end
+  end
+
+  def test_restoration_uses_registration_and_invitation_sanitizer_policies # rubocop:disable Metrics/AbcSize, Metrics/MethodLength
+    %i[sign_up invite].each do |policy|
+      controller = ConcernTestController.new
+      controller.resource = DummyResource.new
+      controller.params = ActionController::Parameters.new(
+        dummy_resource: { email: 'keep@example.com', name: 'Allowed', admin: '1', password: 'secret' }
+      )
+      parameter_method = policy == :invite ? :invite_params : :sign_up_params
+      controller.define_singleton_method(parameter_method) { nil }
+      sanitizer = Devise::ParameterSanitizer.new(DummyResource, :dummy_resource, controller.params)
+      sanitizer.permit(policy, keys: [:name])
+      controller.define_singleton_method(:devise_parameter_sanitizer) { sanitizer }
+      controller.send(:restore_turnstile_submitted_values)
+
+      assert_equal 'keep@example.com', controller.resource.email
+      assert_equal 'Allowed', controller.resource.name
+      assert_nil controller.resource.password
     end
   end
 
