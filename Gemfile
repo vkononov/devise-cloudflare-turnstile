@@ -23,6 +23,7 @@ group :development do
 end
 
 group :test do
+  gem 'activemodel'
   gem 'json', '< 3'
   gem 'minitest'
 

@@ -77,18 +77,12 @@ module Devise
           request.env.delete('devise.allow_params_authentication')
         end
 
-        # Re-populate the resource with the values the user just submitted (minus
-        # passwords) so the re-rendered form keeps their input. We fail in a
-        # before_action, before Devise builds the resource from params, so
-        # without this the form would come back blank. Assigning to the
-        # in-memory resource is safe because the request halts here and the
-        # record is never saved.
+        # Only restore fields accepted by Devise's sanitizer. Even an unsaved
+        # assignment can invoke a model setter with side effects.
         def restore_turnstile_submitted_values
-          return unless respond_to?(:resource_name, true)
+          return unless respond_to?(:devise_parameter_sanitizer, true)
 
-          submitted = params[resource_name]
-          return unless submitted.respond_to?(:each_pair)
-
+          submitted = devise_parameter_sanitizer.sanitize(turnstile_parameter_action)
           submitted.each_pair do |field, value|
             next if field.to_s.include?('password')
             next unless turnstile_scalar_value?(value)
@@ -96,6 +90,13 @@ module Devise
             setter = "#{field}="
             resource.public_send(setter, value) if resource.respond_to?(setter)
           end
+        end
+
+        def turnstile_parameter_action
+          return :invite if respond_to?(:invite_params, true)
+          return :sign_up if respond_to?(:sign_up_params, true)
+
+          :sign_in
         end
 
         # Limits restoration to simple form values. Nested params (e.g. arrays or
